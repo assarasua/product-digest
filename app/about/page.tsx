@@ -22,8 +22,8 @@ export default function AboutPage() {
         explicar conceptos complejos de forma divulgativa para que cualquier PM pueda aplicarlos en su contexto real.
       </p>
       <p>
-        Encontraras ejemplos concretos como: como priorizar cuando faltan datos, como disenar experimentos de producto
-        en equipos pequenos, y como convertir feedback de usuarios en decisiones de roadmap mas solidas.
+        Encontraras ejemplos concretos como: como priorizar cuando faltan datos, como diseñar experimentos de producto
+        en equipos pequeños, y como convertir feedback de usuarios en decisiones de roadmap mas solidas.
       </p>
       <p>
         El objetivo no es solo escribir, sino construir una base de conocimiento util para hacer mejor producto bajo

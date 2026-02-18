@@ -8,15 +8,15 @@ type NewsletterSignupProps = {
 };
 
 export function NewsletterSignup({
-  title = "Unete a la familia Product Digest",
-  description = "Dejanos tu email y te enviaremos ideas aplicables para construir mejor producto."
+  title = "Únete a la familia Product Digest",
+  description = "Déjanos tu email y te enviaremos ideas aplicables para construir mejor producto."
 }: NewsletterSignupProps) {
   const subscribeUrl = "https://api.productdigest.es/api/subscribers";
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "duplicate">("idle");
 
   return (
-    <section className="newsletter-card" aria-label="Unete a Product Digest">
+    <section className="newsletter-card" aria-label="Únete a Product Digest">
       <h2>{title}</h2>
       <p>{description}</p>
 
