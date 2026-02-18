@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { BackButton } from "@/components/BackButton";
 import { TagPill } from "@/components/TagPill";
 import { TableOfContents } from "@/components/TableOfContents";
 import type { Heading } from "@/lib/content";
@@ -27,6 +28,7 @@ export function ArticleLayout({
   return (
     <div className="article-shell">
       <article className="article-main">
+        <BackButton />
         <header className="article-header">
           <p className="meta-row">
             {formatDate(date)} · {readingTimeMinutes} min de lectura

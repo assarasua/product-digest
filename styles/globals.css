@@ -271,6 +271,76 @@ h3 {
   font-style: italic;
 }
 
+.newsletter-card {
+  margin-top: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--paper), white 26%);
+  box-shadow: var(--shadow);
+  padding: 1.2rem;
+}
+
+.newsletter-card h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.newsletter-card p {
+  margin: 0.5rem 0 0;
+  color: var(--ink-soft);
+}
+
+.newsletter-form {
+  margin-top: 0.9rem;
+}
+
+.newsletter-label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+  color: var(--ink-soft);
+}
+
+.newsletter-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.newsletter-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+  font-size: 1rem;
+  background: color-mix(in srgb, var(--paper), white 35%);
+}
+
+.newsletter-input:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent), white 40%);
+  outline-offset: 1px;
+}
+
+.newsletter-button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.72rem 1rem;
+  font-weight: 600;
+  color: white;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.newsletter-button:hover {
+  background: color-mix(in srgb, var(--accent), black 8%);
+}
+
+.newsletter-note a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .article-shell {
   display: grid;
   grid-template-columns: minmax(0, 680px) minmax(220px, 260px);
@@ -280,6 +350,22 @@ h3 {
 
 .article-main {
   min-width: 0;
+}
+
+.back-button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  background: color-mix(in srgb, var(--paper), white 30%);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 0.9rem;
+}
+
+.back-button:hover {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent), white 55%);
 }
 
 .article-header h1 {
@@ -439,5 +525,10 @@ h3 {
   .prose-content {
     font-size: 1.06rem;
     line-height: 1.8;
+  }
+
+  .newsletter-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

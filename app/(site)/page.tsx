@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { PostCard } from "@/components/PostCard";
 import { getAllPosts } from "@/lib/content";
 
@@ -26,6 +27,8 @@ export default function HomePage() {
           <PostCard key={post.slug} post={post} index={index} />
         ))}
       </section>
+
+      <NewsletterSignup />
     </div>
   );
 }
