@@ -27,7 +27,8 @@
     "cf:deploy": "npm run cf:build && npx wrangler deploy",
     "cf:noop": "echo \"Cloudflare Pages deploy handled by platform\"",
     "new:post": "node scripts/new-post.mjs",
-    "publish:next-draft": "node scripts/publish-next-draft.mjs"
+    "publish:next-draft": "node scripts/publish-next-draft.mjs",
+    "publish:next-draft:push": "node scripts/publish-next-draft-push.mjs"
   },
   "dependencies": {
     "@fontsource/source-sans-3": "^5.2.9",

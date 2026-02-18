@@ -22,6 +22,20 @@ npm run new:post -- "Your post title"
 
 Posts are stored in `content/posts` as `YYYY-MM-DD-slug.mdx`.
 
+### Auto publish + push (cron)
+
+To publish one draft per run and push to Git automatically:
+
+```bash
+npm run publish:next-draft:push
+```
+
+Example cron (daily at 09:00):
+
+```bash
+0 9 * * * cd /Users/axi/Documents/product-digest && /opt/homebrew/bin/node scripts/publish-next-draft-push.mjs >> /Users/axi/Documents/product-digest/logs/publish-cron.log 2>&1
+```
+
 ## Build outputs
 
 - Search index: `public/search-index.json` (generated in `prebuild`)
