@@ -55,7 +55,12 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method !== "POST" || parsed.pathname !== "/api/subscribe") {
+  const isSubscribePath =
+    parsed.pathname === "/api/subscribers" ||
+    parsed.pathname === "/api/subscribe" ||
+    parsed.pathname === "/subscribers";
+
+  if (req.method !== "POST" || !isSubscribePath) {
     send(res, 404, { error: "not_found" });
     return;
   }
