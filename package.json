@@ -24,7 +24,8 @@
     "doctor": "node scripts/doctor.mjs",
     "prebuild": "node scripts/generate-search-index.mjs",
     "cf:build": "npm run check:runtime && npm run prebuild && npx @cloudflare/next-on-pages@1",
-    "cf:deploy": "npm run cf:build && npx wrangler pages deploy .vercel/output/static --project-name product-digest",
+    "cf:deploy": "npm run cf:build && npx wrangler deploy",
+    "cf:noop": "echo \"Cloudflare Pages deploy handled by platform\"",
     "new:post": "node scripts/new-post.mjs",
     "publish:next-draft": "node scripts/publish-next-draft.mjs"
   },

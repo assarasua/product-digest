@@ -1,3 +1,5 @@
 name = "product-digest"
 compatibility_date = "2026-02-18"
-pages_build_output_dir = ".vercel/output/static"
+
+[assets]
+directory = ".vercel/output/static"
