@@ -6,8 +6,6 @@ import { ReadingProgress } from "@/components/ReadingProgress";
 import { compilePost } from "@/lib/compile-post";
 import { getAllPostSlugs, getPostBySlug } from "@/lib/content";
 
-export const runtime = "edge";
-
 export function generateStaticParams() {
   return getAllPostSlugs().map((slug) => ({ slug }));
 }
