@@ -77,6 +77,7 @@ npm run build:local
 - `NEXT_PUBLIC_SITE_URL` for canonical URLs and feed/sitemap links.
 - `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to enable Plausible outbound-links analytics.
 - `NEWSLETTER_SUBSCRIBE_API_URL` for newsletter signup persistence from Edge runtime.
+- `NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL` for client-side signup calls when deploying static assets.
 
 ## Cloudflare Deploy (Wrangler)
 

@@ -11,6 +11,7 @@ export function NewsletterSignup({
   title = "Unete a la familia Product Digest",
   description = "Dejanos tu email y te enviaremos ideas aplicables para construir mejor producto."
 }: NewsletterSignupProps) {
+  const subscribeUrl = process.env.NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL ?? "/api/subscribers";
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "duplicate">("idle");
 
@@ -26,7 +27,7 @@ export function NewsletterSignup({
           setStatus("loading");
 
           try {
-            const response = await fetch("/api/subscribers", {
+            const response = await fetch(subscribeUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email })
