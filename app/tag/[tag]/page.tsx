@@ -1,18 +1,8 @@
-import type { Metadata } from "next";
-
 import { PostCard } from "@/components/PostCard";
 import { getAllTags, getPostsByTag } from "@/lib/content";
 
 export function generateStaticParams() {
   return getAllTags().map(({ tag }) => ({ tag }));
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ tag: string }> }): Promise<Metadata> {
-  const { tag } = await params;
-  return {
-    title: `Tema: ${tag}`,
-    description: `Articulos etiquetados como ${tag}.`
-  };
 }
 
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {

@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ArticleLayout } from "@/components/ArticleLayout";
@@ -8,35 +7,6 @@ import { getAllPostSlugs, getPostBySlug } from "@/lib/content";
 
 export function generateStaticParams() {
   return getAllPostSlugs().map((slug) => ({ slug }));
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
-
-  if (!post) {
-    return {
-      title: "No encontrado"
-    };
-  }
-
-  return {
-    title: post.title,
-    description: post.summary,
-    openGraph: {
-      title: post.title,
-      description: post.summary,
-      type: "article",
-      publishedTime: post.date,
-      modifiedTime: post.updatedAt ?? post.date,
-      tags: post.tags
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: post.title,
-      description: post.summary
-    }
-  };
 }
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
