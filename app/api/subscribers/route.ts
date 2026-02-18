@@ -1,6 +1,4 @@
-import { addSubscriber } from "@/lib/subscribers-db";
-
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 type Payload = {
   email?: string;
@@ -11,6 +9,7 @@ function isValidEmail(value: string) {
 }
 
 const allowedOrigin = process.env.NEWSLETTER_ALLOWED_ORIGIN ?? "https://productdigest.es";
+const upstreamUrl = process.env.NEWSLETTER_SUBSCRIBE_API_URL ?? "https://api.productdigest.es/api/subscribers";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": allowedOrigin,
@@ -42,15 +41,24 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await addSubscriber(email);
-    if (!result.ok && result.code === "duplicate") {
+    const response = await fetch(upstreamUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email })
+    });
+
+    if (response.status === 409) {
       return json({ error: "duplicate" }, 409);
     }
-    if (!result.ok) {
-      return json({ error: "db_error" }, 500);
+
+    if (!response.ok) {
+      return json({ error: "upstream_error" }, 502);
     }
+
     return json({ ok: true });
   } catch {
-    return json({ error: "db_unreachable" }, 502);
+    return json({ error: "upstream_unreachable" }, 502);
   }
 }
