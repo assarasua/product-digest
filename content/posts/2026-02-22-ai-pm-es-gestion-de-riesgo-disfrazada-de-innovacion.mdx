@@ -1,0 +1,88 @@
+---
+title: AI PM es gestión de riesgo disfrazada de innovación
+date: '2026-02-22'
+summary: >-
+  El éxito en producto con IA depende menos de prompts brillantes y más de
+  gestionar riesgo operativo, reputacional y económico.
+tags:
+  - ai-pm
+  - risk
+  - product-strategy
+draft: true
+---
+En AI PM, la diferencia entre una demo atractiva y un producto durable suele estar en los detalles operativos que casi nunca se celebran en publico.
+
+Los equipos de producto con IA suelen empezar con demos espectaculares y terminar discutiendo incidentes: respuestas incorrectas, costos inesperados, latencia alta, usuarios que pierden confianza. El patrón se repite porque el foco inicial está en la novedad, no en la confiabilidad del sistema.
+
+La IA amplifica capacidad, pero también amplifica riesgo. Y en productos de negocio, el riesgo no es un tema legal al final del proceso; es una variable de diseño desde el primer día.
+
+Tecnicamente, la idea central es: gestionar producto con IA es, principalmente, gestionar un portafolio de riesgos con impacto directo en valor de usuario.
+
+Riesgos típicos:
+
+- **Calidad**: respuestas inexactas o inconsistentes.
+- **Confianza**: comportamiento opaco o impredecible.
+- **Economía**: costos por interacción que destruyen margen.
+- **Operación**: dependencia de proveedores y variabilidad de performance.
+
+Límite: no todos los features con IA exigen el mismo nivel de control. Un asistente interno tolera más error que un flujo que envía información a clientes finales.
+
+Antes de priorizar una funcionalidad de IA, evalúalo en cuatro ejes:
+
+1. Potencial de valor para usuario.
+2. Severidad de falla.
+3. Probabilidad de falla.
+4. Costo de mitigación.
+
+Con esto puedes clasificar iniciativas:
+
+- Alto valor / bajo riesgo: ejecutar rápido.
+- Alto valor / alto riesgo: ejecutar con guardrails fuertes.
+- Bajo valor / alto riesgo: descartar o postergar.
+
+Este enfoque evita dos extremos dañinos: bloquear toda innovación por miedo, o lanzar todo por FOMO.
+
+Una startup de soporte implementó resúmenes automáticos para agentes. En pruebas internas, funcionaba muy bien. En producción, en casos complejos omitía contexto crítico y el equipo perdía tiempo corrigiendo manualmente.
+
+Con enfoque de riesgo, redefinieron el producto: resumen con etiquetas de confianza, links al texto original y un paso explícito de validación antes de enviar respuesta al cliente. El funcionalidad siguió dando velocidad, pero con menor probabilidad de error costoso.
+
+El tradeoff tecnico-operativo es: agregaron fricción en UX. Ganaron confiabilidad y evitaron daños reputacionales en cuentas enterprise.
+
+“Si ponemos demasiados controles, perderemos ventaja de velocidad.”
+
+Desde producto y riesgo, la respuesta es: controles mal diseñados frenan; controles bien diseñados habilitan escala. El problema no es tener guardrails, sino aplicarlos sin diferenciar criticidad de flujo.
+
+La velocidad sostenible no es lanzar rápido una vez. Es lanzar rápido repetidamente sin romper confianza.
+
+- Lista 3 modos de falla inaceptables por funcionalidad de IA.
+- Define plan de respaldo UX cuando la confianza del modelo sea baja.
+- Establece umbrales mínimos de calidad y latencia antes de despliegue.
+- Mide costo por tarea completada, no solo costo por llamada.
+- Crea una revisión semanal de incidentes con PM, diseño e ingeniería.
+
+Un error habitual es tratar riesgo como checklist legal al final. En realidad, el riesgo debe vivir en el loop de priorización semanal. Una práctica que funciona es construir un "Risk Review de Producto" de 30 minutos con cuatro preguntas fijas:
+
+1. ¿Qué fallas nuevas aparecieron esta semana?
+2. ¿Qué fallas esperadas ya no están controladas?
+3. ¿Qué compromisos comerciales estamos asumiendo por encima de capacidad real?
+4. ¿Qué ajuste de guardrails reduce más riesgo por menor costo?
+
+Este formato evita que la conversación se vaya a abstracciones y la aterriza en decisiones operativas.
+
+Otra mejora de alto impacto es diferenciar "riesgo tolerable" de "riesgo inaceptable" por workflow. En features de apoyo interno, puedes tolerar mayor variabilidad y priorizar velocidad de iteración. En flujos customer-facing, el umbral de error debe ser más estricto desde el inicio.
+
+También conviene crear un mapa de dependencias externas: proveedor de modelo, vector DB, herramientas de observabilidad, políticas de acceso, latencia por región. Muchos incidentes no nacen en prompt o UX; nacen en dependencia no observada.
+
+En métricas, agrega tres indicadores además de calidad:
+
+- **Tasa de corrección manual** por tarea.
+- **Incidentes de confianza** (usuarios que abandonan o desactivan funcionalidad).
+- **Costo por resultado aceptado**.
+
+Finalmente, convierte cada incidente relevante en una mejora de sistema, no en parche local. Si una falla se repite en distintos casos, no es bug aislado: es deuda de diseño de riesgo.
+
+Gestionar riesgo bien no mata innovación. La vuelve repetible.
+
+Antes de habilitar una funcionalidad para todos, define una política corta de despliegue con tres reglas: umbral de calidad, plan de plan de respaldo y responsable de incidentes en horario operativo. Si una de esas tres piezas falta, aún no estás listo para escalar. Esta disciplina reduce fricción entre producto, ingeniería y soporte cuando aparecen fallas reales.
+
+También conviene crear un "postmortem ligero" para incidentes de confianza: qué vio el usuario, qué esperábamos, qué señal faltó y qué cambio sistémico haremos. Así cada error se convierte en ventaja futura.

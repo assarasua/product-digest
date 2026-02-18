@@ -1,0 +1,16 @@
+id,title,theme,week,sequence,status,thesis_strength,evidence_level,framework_included,read_time,target_words,prior_article,next_article
+01,Why Most Roadmaps Fail the Learning Test,pm-fundamentals,1,1,idea,0,mixed,yes,5,1000,,The Decision Velocity Framework (Not Delivery Velocity)
+02,The Decision Velocity Framework (Not Delivery Velocity),pm-fundamentals,1,2,idea,0,mixed,yes,5,1000,Why Most Roadmaps Fail the Learning Test,Outcome Mapping: From Feature Requests to Behavior Change
+03,Outcome Mapping: From Feature Requests to Behavior Change,pm-fundamentals,2,3,idea,0,mixed,yes,5,1000,The Decision Velocity Framework (Not Delivery Velocity),AI PM Is Risk Management Disguised as Innovation
+04,AI PM Is Risk Management Disguised as Innovation,ai-pm,2,4,idea,0,mixed,yes,5,1000,Outcome Mapping: From Feature Requests to Behavior Change,The Reliability Ladder for AI Features (v0 to Mission-Critical)
+05,The Reliability Ladder for AI Features (v0 to Mission-Critical),ai-pm,3,5,idea,0,strong,yes,5,1000,AI PM Is Risk Management Disguised as Innovation,Prompt UX vs Product UX: Where Teams Misinvest
+06,Prompt UX vs Product UX: Where Teams Misinvest,ai-pm,3,6,idea,0,mixed,yes,5,1000,The Reliability Ladder for AI Features (v0 to Mission-Critical),Eval-Driven Product Management: The Missing Operating System
+07,Eval-Driven Product Management: The Missing Operating System,ai-pm,4,7,idea,0,strong,yes,5,1000,Prompt UX vs Product UX: Where Teams Misinvest,SaaS Is Dead, Bundles Are Back: What Actually Changed
+08,SaaS Is Dead, Bundles Are Back: What Actually Changed,saas-thesis-frameworks,4,8,idea,0,mixed,yes,5,1000,Eval-Driven Product Management: The Missing Operating System,The New Moat Stack: Distribution, Data, Workflow, Trust
+09,The New Moat Stack: Distribution Data Workflow Trust,saas-thesis-frameworks,5,9,idea,0,strong,yes,5,1000,SaaS Is Dead, Bundles Are Back: What Actually Changed,Interface Is Commodity, Workflow Is Defensible
+10,Interface Is Commodity, Workflow Is Defensible,saas-thesis-frameworks,5,10,idea,0,mixed,yes,5,1000,The New Moat Stack: Distribution Data Workflow Trust,Seat-Based Pricing Breaks in the Agent Era
+11,Seat-Based Pricing Breaks in the Agent Era,saas-thesis-frameworks,6,11,idea,0,strong,yes,5,1000,Interface Is Commodity, Workflow Is Defensible,From SaaS App to System of Decisions
+12,From SaaS App to System of Decisions,saas-thesis-frameworks,6,12,idea,0,mixed,yes,5,1000,Seat-Based Pricing Breaks in the Agent Era,Why Vertical AI Wins Where Horizontal SaaS Stalls
+13,Why Vertical AI Wins Where Horizontal SaaS Stalls,saas-thesis-frameworks,7,13,idea,0,strong,yes,5,1000,From SaaS App to System of Decisions,The Post-SaaS GTM Playbook: Wedges Expansion Lock-In
+14,The Post-SaaS GTM Playbook: Wedges Expansion Lock-In,saas-thesis-frameworks,7,14,idea,0,mixed,yes,5,1000,Why Vertical AI Wins Where Horizontal SaaS Stalls,Your Product Strategy Is a Portfolio of Time Horizons
+15,Your Product Strategy Is a Portfolio of Time Horizons,saas-thesis-frameworks,8,15,idea,0,mixed,yes,5,1000,The Post-SaaS GTM Playbook: Wedges Expansion Lock-In,

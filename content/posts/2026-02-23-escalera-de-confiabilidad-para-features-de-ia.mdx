@@ -1,0 +1,86 @@
+---
+title: Escalera de confiabilidad para features de IA (de v0 a misión crítica)
+date: '2026-02-23'
+summary: >-
+  No existe un único estándar de calidad para IA: cada nivel de criticidad exige
+  umbrales y controles distintos.
+tags:
+  - ai-pm
+  - reliability
+  - execution
+draft: true
+---
+En AI PM, la diferencia entre una demo atractiva y un producto durable suele estar en los detalles operativos que casi nunca se celebran en publico.
+
+Un error común en AI PM es usar la misma expectativa de calidad para todo. Un asistente de brainstorming interno se evalúa como si fuera un sistema de decisiones financieras. O peor: un flujo crítico se lanza con estándares de prototipo.
+
+La consecuencia es doble: o frenas innovación innecesariamente, o introduces riesgo donde no puedes fallar. Necesitas una progresión explícita de confiabilidad.
+
+Tecnicamente, la idea central es: cada funcionalidad de IA debe ubicarse en un nivel de confiabilidad y tener criterios de subida claros antes de asumir más responsabilidad en el workflow.
+
+Límite: no todas las empresas pueden instrumentar evaluaciones avanzadas desde día uno. Pero todas pueden definir niveles, riesgos y reglas mínimas por nivel.
+
+- Objetivo: aprender rápido.
+- Riesgo aceptable: alto.
+- Guardrails: básicos.
+- Uso: demos internas, validación de interés.
+
+- Objetivo: acelerar tareas no críticas.
+- Riesgo aceptable: medio.
+- Guardrails: revisión humana opcional, plan de respaldo simple.
+
+- Objetivo: recomendar acciones con contexto.
+- Riesgo aceptable: bajo-medio.
+- Guardrails: trazabilidad, señales de confianza, override fácil.
+
+- Objetivo: impactar decisiones sensibles o flujos externos.
+- Riesgo aceptable: bajo.
+- Guardrails: evaluación continua, auditoría, controles estrictos.
+
+Subir de nivel no es “porque gustó la funcionalidad”; es porque cumplió métricas de calidad, estabilidad y costo.
+
+Una startup de operaciones empezó con un copiloto interno (Nivel 1). Buenas señales de productividad llevaron al liderazgo a usarlo en respuestas a clientes (Nivel 3) sin transición. Resultado: errores visibles y pérdida de confianza.
+
+Volvieron atrás y diseñaron una migración por niveles: primero soporte a decisión con revisión obligatoria, luego automatización parcial en escenarios de baja complejidad. La percepción del producto mejoró porque el avance fue controlado.
+
+El tradeoff tecnico-operativo es: el time-to-market comercial se retrasó seis semanas. Pero evitó incidentes que habrían costado mucho más.
+
+“Los niveles crean burocracia.”
+
+Desde producto y riesgo, la respuesta es: sin niveles, la burocracia aparece igual, pero como gestión de crisis. La escalera no agrega papeleo; reduce errores de contexto y expectativas.
+
+La pregunta correcta no es “¿podemos lanzarlo?”. Es “¿en qué nivel puede operar de forma segura hoy?”.
+
+- Clasifica cada funcionalidad de IA actual en un nivel 0-3.
+- Define criterios de éxito para subir de nivel.
+- Establece métricas mínimas de calidad y latencia por nivel.
+- Documenta los guardrails obligatorios por nivel.
+- Alinea a GTM sobre promesas permitidas según nivel.
+
+Para que la Escalera de Confiabilidad no quede en documento, define "gate reviews" explícitas entre niveles. Cada subida debe responder tres preguntas: ¿cumplió umbral de calidad?, ¿es económicamente sostenible?, ¿el usuario entiende límites y puede recuperarse cuando falla?
+
+Una táctica útil es diseñar contratos de nivel por funcionalidad. Ejemplo:
+
+- Nivel 1: objetivo de utilidad, no precisión perfecta.
+- Nivel 2: precisión mínima por tipo de tarea + trazabilidad.
+- Nivel 3: precisión y seguridad por encima de umbral estricto + auditoría.
+
+Esto evita debates subjetivos del tipo "ya está listo".
+
+También debes ajustar el tipo de evaluación según nivel. En niveles bajos, basta con set pequeño y revisión humana rápida. En niveles altos, necesitas evaluación más representativa de escenarios reales, segmentada por tipo de usuario y contexto de uso.
+
+Otro punto crítico: evita "saltos emocionales" de nivel por presión comercial. Si una cuenta grande pide un caso misión crítica, la respuesta no debe ser promesa inmediata, sino roadmap de confiabilidad con fechas y criterios.
+
+A nivel organizacional, asigna ownership claro:
+
+- PM define valor y umbrales de experiencia.
+- Ingeniería define robustez técnica y observabilidad.
+- Diseño define claridad de confianza y recuperación.
+
+Cuando ese triángulo trabaja con el mismo lenguaje de nivel, la evolución del funcionalidad deja de ser improvisada.
+
+La escalera funciona porque impone secuencia: primero evidencia, luego expansión de responsabilidad. Ese orden protege al usuario, al negocio y al equipo.
+
+Hay tres errores frecuentes al subir de nivel: mover una funcionalidad por presión comercial, usar métricas agregadas que esconden fallas por segmento y prometer capacidades de nivel superior antes de cumplir criterios técnicos. Para evitarlo, revisa métricas por tipo de tarea y por tipo de usuario. Un promedio bueno puede esconder una experiencia mala en el caso más crítico.
+
+Además, define una regla explícita de rollback por nivel. Si una funcionalidad de nivel 2 supera cierto umbral de incidentes o latencia, vuelve temporalmente a nivel 1 con controles reforzados. Retroceder a tiempo protege marca y permite reintentar con más calidad.

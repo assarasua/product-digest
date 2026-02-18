@@ -1,0 +1,45 @@
+{
+  "name": "product-digest",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run build:local",
+    "build:local": "npm run check:runtime && npm run prebuild && next build --no-lint",
+    "build:ci": "DOCTOR_STRICT=1 npm run doctor && npm run prebuild && next build",
+    "build:debug": "mkdir -p logs && npm run check:runtime && npm run prebuild && NEXT_TELEMETRY_DISABLED=1 next build --debug 2>&1 | tee logs/build-debug.log",
+    "start": "next start",
+    "lint": "next lint",
+    "check:runtime": "node scripts/check-runtime.mjs",
+    "check:types": "tsc --noEmit",
+    "check:types:debug": "node scripts/check-types-debug.mjs",
+    "check:lint": "next lint",
+    "check:content": "node scripts/check-content.mjs",
+    "check:all": "npm run check:runtime && npm run check:types && npm run check:content && npm run check:lint",
+    "clean:next": "node scripts/clean-next.mjs",
+    "kill:next": "node scripts/kill-next.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "prebuild": "node scripts/generate-search-index.mjs",
+    "new:post": "node scripts/new-post.mjs",
+    "publish:next-draft": "node scripts/publish-next-draft.mjs"
+  },
+  "dependencies": {
+    "@fontsource/source-sans-3": "^5.2.9",
+    "@fontsource/spectral": "^5.2.8",
+    "gray-matter": "^4.0.3",
+    "next": "15.5.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "reading-time": "^1.5.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.6",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "typescript": "^5.7.3"
+  }
+}
