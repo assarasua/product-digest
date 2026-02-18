@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { HomeFeedPagination } from "@/components/HomeFeedPagination";
-import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { PostCard } from "@/components/PostCard";
 import { getAllPosts } from "@/lib/content";
 
@@ -35,8 +34,6 @@ export default function HomePage() {
       >
         <HomeFeedPagination posts={posts} />
       </Suspense>
-
-      <NewsletterSignup />
     </div>
   );
 }

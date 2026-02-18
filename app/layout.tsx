@@ -3,6 +3,7 @@ import Link from "next/link";
 import Script from "next/script";
 import type { ReactNode } from "react";
 
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import "../styles/globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
@@ -59,6 +60,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </nav>
           </header>
           <main>{children}</main>
+          <div className="page-wrap">
+            <NewsletterSignup />
+          </div>
         </div>
       </body>
     </html>

@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 
-import { NewsletterSignup } from "@/components/NewsletterSignup";
-
 export const metadata: Metadata = {
   title: "Acerca de Product Digest",
   description: "Acerca de Product Digest y su enfoque con IA."
@@ -31,11 +29,6 @@ export default function AboutPage() {
         El objetivo no es solo escribir, sino construir una base de conocimiento util para hacer mejor producto bajo
         incertidumbre.
       </p>
-
-      <NewsletterSignup
-        title="Newsletter de Product Digest"
-        description="Recibe nuevos articulos y aprendizajes aplicables para producto en etapa de crecimiento."
-      />
     </div>
   );
 }
