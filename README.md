@@ -92,3 +92,10 @@ Wrangler reads the asset directory from `wrangler.toml`:
 [assets]
 directory = ".vercel/output/static"
 ```
+
+To prevent Wrangler from uploading private Pages worker internals, the build
+creates `.vercel/output/static/.assetsignore` with:
+
+```txt
+_worker.js
+```

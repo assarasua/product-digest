@@ -23,7 +23,7 @@
     "kill:next": "node scripts/kill-next.mjs",
     "doctor": "node scripts/doctor.mjs",
     "prebuild": "node scripts/generate-search-index.mjs",
-    "cf:build": "npm run check:runtime && npm run prebuild && npx @cloudflare/next-on-pages@1",
+    "cf:build": "npm run check:runtime && npm run prebuild && npx @cloudflare/next-on-pages@1 && node scripts/prepare-wrangler-assets.mjs",
     "cf:deploy": "npm run cf:build && npx wrangler deploy",
     "cf:noop": "echo \"Cloudflare Pages deploy handled by platform\"",
     "new:post": "node scripts/new-post.mjs",
