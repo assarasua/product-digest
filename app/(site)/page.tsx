@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { HomeFeedPagination } from "@/components/HomeFeedPagination";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { PostCard } from "@/components/PostCard";
 import { getAllPosts } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -22,7 +24,17 @@ export default function HomePage() {
         </p>
       </section>
 
-      <HomeFeedPagination posts={posts} />
+      <Suspense
+        fallback={
+          <section className="feed-grid" aria-label="Ultimos articulos">
+            {posts.slice(0, 5).map((post, index) => (
+              <PostCard key={post.slug} post={post} index={index} />
+            ))}
+          </section>
+        }
+      >
+        <HomeFeedPagination posts={posts} />
+      </Suspense>
 
       <NewsletterSignup />
     </div>
