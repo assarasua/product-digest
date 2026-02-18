@@ -12,6 +12,7 @@ export function NewsletterSignup({
   description = "Dejanos tu email y te enviaremos ideas aplicables para construir mejor producto."
 }: NewsletterSignupProps) {
   const subscribeUrl = "/api/subscribers";
+  const fallbackSubscribeUrl = "https://api.productdigest.es/api/subscribers";
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "duplicate">("idle");
 
@@ -27,11 +28,20 @@ export function NewsletterSignup({
           setStatus("loading");
 
           try {
-            const response = await fetch(subscribeUrl, {
+            let response = await fetch(subscribeUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email })
             });
+
+            // Static-only deploys can return 404 for local API routes.
+            if (response.status === 404) {
+              response = await fetch(fallbackSubscribeUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email })
+              });
+            }
 
             if (response.ok) {
               setEmail("");
