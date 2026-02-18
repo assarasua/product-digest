@@ -11,8 +11,8 @@ export function NewsletterSignup({
   title = "Unete a la familia Product Digest",
   description = "Dejanos tu email y te enviaremos ideas aplicables para construir mejor producto."
 }: NewsletterSignupProps) {
-  const subscribeUrl = "/api/subscribers";
-  const fallbackSubscribeUrl = "https://api.productdigest.es/api/subscribers";
+  const subscribeUrl = "https://api.productdigest.es/api/subscribers";
+  const fallbackSubscribeUrl = "/api/subscribers";
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "duplicate">("idle");
 
