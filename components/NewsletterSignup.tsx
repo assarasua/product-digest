@@ -116,7 +116,7 @@ function normalizeSubscribeUrl(rawValue: string | undefined): string | null {
     const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
     const url = new URL(withProtocol);
     if (url.pathname === "/" || url.pathname === "") {
-      url.pathname = "/subscribers";
+      url.pathname = "/api/subscribers";
     }
     return url.toString();
   } catch {
