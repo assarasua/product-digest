@@ -1,4 +1,4 @@
-import { addSubscriber } from "@/lib/subscribers-db";
+export const runtime = "edge";
 
 type Payload = {
   email?: string;
@@ -22,18 +22,38 @@ export async function POST(request: Request) {
     return Response.json({ error: "invalid_email" }, { status: 400 });
   }
 
-  const result = await addSubscriber(email);
-  if (result.ok) {
+  const subscribeApiUrl = process.env.NEWSLETTER_SUBSCRIBE_API_URL;
+
+  if (!subscribeApiUrl) {
+    return Response.json(
+      {
+        error: "missing_subscribe_api_url",
+        message:
+          "Define NEWSLETTER_SUBSCRIBE_API_URL to persist emails from Edge runtime."
+      },
+      { status: 500 }
+    );
+  }
+
+  try {
+    const response = await fetch(subscribeApiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email })
+    });
+
+    if (response.status === 409) {
+      return Response.json({ error: "duplicate" }, { status: 409 });
+    }
+
+    if (!response.ok) {
+      return Response.json({ error: "upstream_error" }, { status: 502 });
+    }
+
     return Response.json({ ok: true });
+  } catch {
+    return Response.json({ error: "upstream_unreachable" }, { status: 502 });
   }
-
-  if (result.code === "duplicate") {
-    return Response.json({ error: "duplicate" }, { status: 409 });
-  }
-
-  if (result.code === "pg_missing") {
-    return Response.json({ error: "pg_missing" }, { status: 500 });
-  }
-
-  return Response.json({ error: "db_error" }, { status: 500 });
 }

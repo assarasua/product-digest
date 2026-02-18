@@ -26,6 +26,7 @@
     "cf:build": "npm run check:runtime && npm run prebuild && npx @cloudflare/next-on-pages@1 && node scripts/prepare-wrangler-assets.mjs",
     "cf:deploy": "npm run cf:build && npx wrangler deploy",
     "cf:noop": "echo \"Cloudflare Pages deploy handled by platform\"",
+    "backend:start": "node backend/subscribe-server.mjs",
     "new:post": "node scripts/new-post.mjs",
     "publish:next-draft": "node scripts/publish-next-draft.mjs",
     "publish:next-draft:push": "node scripts/publish-next-draft-push.mjs"

@@ -76,6 +76,7 @@ npm run build:local
 
 - `NEXT_PUBLIC_SITE_URL` for canonical URLs and feed/sitemap links.
 - `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to enable Plausible outbound-links analytics.
+- `NEWSLETTER_SUBSCRIBE_API_URL` for newsletter signup persistence from Edge runtime.
 
 ## Cloudflare Deploy (Wrangler)
 
@@ -112,4 +113,28 @@ creates `.vercel/output/static/.assetsignore` with:
 
 ```txt
 _worker.js
+```
+
+## Railway Subscribe API (PostgreSQL)
+
+Use this backend to store newsletter emails in Railway Postgres and connect it
+to the Edge route used by the site.
+
+### Start backend locally
+
+```bash
+npm install pg @types/pg
+DATABASE_URL="postgresql://..." npm run backend:start
+```
+
+Server endpoints:
+- `POST /api/subscribe`
+- `GET /healthz`
+
+### Connect frontend (Cloudflare)
+
+Set this environment variable in your Cloudflare project:
+
+```bash
+NEWSLETTER_SUBSCRIBE_API_URL=https://<your-railway-domain>/api/subscribe
 ```

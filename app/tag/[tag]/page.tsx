@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { PostCard } from "@/components/PostCard";
 import { getAllTags, getPostsByTag } from "@/lib/content";
 
+export const runtime = "edge";
+
 export function generateStaticParams() {
   return getAllTags().map(({ tag }) => ({ tag }));
 }
