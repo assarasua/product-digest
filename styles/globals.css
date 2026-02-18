@@ -124,6 +124,38 @@ a {
   margin-top: 1.8rem;
 }
 
+.pagination {
+  margin-top: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.pagination-link {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: color-mix(in srgb, var(--paper), white 30%);
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+
+.pagination-link:hover {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent), white 55%);
+}
+
+.pagination-link.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.pagination-status {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
 .post-card {
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -525,6 +557,11 @@ h3 {
   .prose-content {
     font-size: 1.06rem;
     line-height: 1.8;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .newsletter-row {
