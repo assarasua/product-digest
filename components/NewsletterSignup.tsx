@@ -11,14 +11,9 @@ export function NewsletterSignup({
   title = "Unete a la familia Product Digest",
   description = "Dejanos tu email y te enviaremos ideas aplicables para construir mejor producto."
 }: NewsletterSignupProps) {
-  const rawSubscribeUrl =
-    process.env.NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL ?? "/api/subscribers";
-  const subscribeUrl = normalizeSubscribeUrl(rawSubscribeUrl);
-  const isConfigured = Boolean(subscribeUrl);
+  const subscribeUrl = "/api/subscribers";
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<
-    "idle" | "loading" | "success" | "error" | "duplicate" | "not_configured" | "cors_error"
-  >("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "duplicate">("idle");
 
   return (
     <section className="newsletter-card" aria-label="Unete a Product Digest">
@@ -29,10 +24,6 @@ export function NewsletterSignup({
         className="newsletter-form"
         onSubmit={async (event) => {
           event.preventDefault();
-          if (!subscribeUrl) {
-            setStatus("not_configured");
-            return;
-          }
           setStatus("loading");
 
           try {
@@ -55,11 +46,7 @@ export function NewsletterSignup({
             }
 
             setStatus("error");
-          } catch (error) {
-            if (error instanceof TypeError) {
-              setStatus("cors_error");
-              return;
-            }
+          } catch {
             setStatus("error");
           }
         }}
@@ -88,43 +75,6 @@ export function NewsletterSignup({
       {status === "success" ? <p className="newsletter-note">Gracias. Ya formas parte de Product Digest.</p> : null}
       {status === "duplicate" ? <p className="newsletter-note">Ese email ya esta registrado.</p> : null}
       {status === "error" ? <p className="newsletter-note">No se pudo guardar tu email. Intenta de nuevo.</p> : null}
-      {status === "cors_error" ? (
-        <p className="newsletter-note">
-          El API de suscripcion esta bloqueando CORS para <code>https://productdigest.es</code>.
-        </p>
-      ) : null}
-      {!isConfigured || status === "not_configured" ? (
-        <p className="newsletter-note">
-          Falta configurar <code>NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL</code> en el deploy (ejemplo:
-          <code>/api/subscribers</code>).
-        </p>
-      ) : null}
     </section>
   );
-}
-
-function normalizeSubscribeUrl(rawValue: string | undefined): string | null {
-  if (!rawValue) {
-    return null;
-  }
-
-  const trimmed = rawValue.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  if (trimmed.startsWith("/")) {
-    return trimmed;
-  }
-
-  try {
-    const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-    const url = new URL(withProtocol);
-    if (url.pathname === "/" || url.pathname === "") {
-      url.pathname = "/api/subscribers";
-    }
-    return url.toString();
-  } catch {
-    return null;
-  }
 }
