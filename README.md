@@ -62,3 +62,25 @@ npm run build:local
 
 - `NEXT_PUBLIC_SITE_URL` for canonical URLs and feed/sitemap links.
 - `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to enable Plausible outbound-links analytics.
+
+## Cloudflare Pages (without Vercel)
+
+Use Cloudflare Pages build/deploy flow, not `wrangler deploy`.
+
+### Build settings in Cloudflare Pages
+
+- Framework preset: `None`
+- Build command: `npm run cf:build`
+- Build output directory: `.vercel/output/static`
+- Node.js version: `22`
+
+### Local deploy command (optional)
+
+```bash
+npm run cf:deploy
+```
+
+### Important
+
+- Do not use `wrangler deploy` for this project.
+- If you use Wrangler directly, use `wrangler pages deploy ...` instead.
