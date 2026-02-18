@@ -11,7 +11,8 @@ export function NewsletterSignup({
   title = "Unete a la familia Product Digest",
   description = "Dejanos tu email y te enviaremos ideas aplicables para construir mejor producto."
 }: NewsletterSignupProps) {
-  const subscribeUrl = process.env.NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL;
+  const rawSubscribeUrl = process.env.NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL;
+  const subscribeUrl = normalizeSubscribeUrl(rawSubscribeUrl);
   const isConfigured = Boolean(subscribeUrl);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "duplicate" | "not_configured">(
@@ -84,9 +85,32 @@ export function NewsletterSignup({
       {status === "error" ? <p className="newsletter-note">No se pudo guardar tu email. Intenta de nuevo.</p> : null}
       {!isConfigured || status === "not_configured" ? (
         <p className="newsletter-note">
-          Falta configurar <code>NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL</code> en el deploy.
+          Falta configurar <code>NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL</code> en el deploy (ejemplo:
+          <code>https://api.productdigest.es/subscribers</code>).
         </p>
       ) : null}
     </section>
   );
+}
+
+function normalizeSubscribeUrl(rawValue: string | undefined): string | null {
+  if (!rawValue) {
+    return null;
+  }
+
+  const trimmed = rawValue.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const url = new URL(withProtocol);
+    if (url.pathname === "/" || url.pathname === "") {
+      url.pathname = "/subscribers";
+    }
+    return url.toString();
+  } catch {
+    return null;
+  }
 }
