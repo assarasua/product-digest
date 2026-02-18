@@ -12,7 +12,7 @@ export function NewsletterSignup({
   description = "Dejanos tu email y te enviaremos ideas aplicables para construir mejor producto."
 }: NewsletterSignupProps) {
   const rawSubscribeUrl =
-    process.env.NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL ?? "https://api.productdigest.es/api/subscribers";
+    process.env.NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL ?? "/api/subscribers";
   const subscribeUrl = normalizeSubscribeUrl(rawSubscribeUrl);
   const isConfigured = Boolean(subscribeUrl);
   const [email, setEmail] = useState("");
@@ -96,7 +96,7 @@ export function NewsletterSignup({
       {!isConfigured || status === "not_configured" ? (
         <p className="newsletter-note">
           Falta configurar <code>NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL</code> en el deploy (ejemplo:
-          <code>https://api.productdigest.es/api/subscribers</code>).
+          <code>/api/subscribers</code>).
         </p>
       ) : null}
     </section>
@@ -111,6 +111,10 @@ function normalizeSubscribeUrl(rawValue: string | undefined): string | null {
   const trimmed = rawValue.trim();
   if (!trimmed) {
     return null;
+  }
+
+  if (trimmed.startsWith("/")) {
+    return trimmed;
   }
 
   try {
