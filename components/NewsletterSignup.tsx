@@ -15,9 +15,9 @@ export function NewsletterSignup({
   const subscribeUrl = normalizeSubscribeUrl(rawSubscribeUrl);
   const isConfigured = Boolean(subscribeUrl);
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "duplicate" | "not_configured">(
-    "idle"
-  );
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error" | "duplicate" | "not_configured" | "cors_error"
+  >("idle");
 
   return (
     <section className="newsletter-card" aria-label="Unete a Product Digest">
@@ -54,7 +54,11 @@ export function NewsletterSignup({
             }
 
             setStatus("error");
-          } catch {
+          } catch (error) {
+            if (error instanceof TypeError) {
+              setStatus("cors_error");
+              return;
+            }
             setStatus("error");
           }
         }}
@@ -83,6 +87,11 @@ export function NewsletterSignup({
       {status === "success" ? <p className="newsletter-note">Gracias. Ya formas parte de Product Digest.</p> : null}
       {status === "duplicate" ? <p className="newsletter-note">Ese email ya esta registrado.</p> : null}
       {status === "error" ? <p className="newsletter-note">No se pudo guardar tu email. Intenta de nuevo.</p> : null}
+      {status === "cors_error" ? (
+        <p className="newsletter-note">
+          El API de suscripcion esta bloqueando CORS para <code>https://productdigest.es</code>.
+        </p>
+      ) : null}
       {!isConfigured || status === "not_configured" ? (
         <p className="newsletter-note">
           Falta configurar <code>NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL</code> en el deploy (ejemplo:

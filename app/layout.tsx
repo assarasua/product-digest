@@ -9,6 +9,9 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  icons: {
+    icon: "/icon.svg"
+  },
   title: {
     default: "Product Digest",
     template: "%s | Product Digest"
