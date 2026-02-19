@@ -4,7 +4,10 @@ import { SearchClient } from "@/components/SearchClient";
 
 export const metadata: Metadata = {
   title: "Buscar",
-  description: "Busca en todos los artículos del blog."
+  description: "Busca en todos los artículos del blog.",
+  alternates: {
+    canonical: "/search"
+  }
 };
 
 export default function SearchPage() {

@@ -13,7 +13,7 @@ function escapeXml(value: string) {
 
 export async function GET() {
   const posts = getAllPosts();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://productdigest.es";
 
   const items = posts
     .map((post) => {
@@ -33,7 +33,7 @@ export async function GET() {
 <channel>
   <title>Product Digest</title>
   <link>${siteUrl}</link>
-  <description>Analisis y escritura diaria sobre gestión de producto.</description>
+  <description>Análisis y escritura diaria sobre gestión de producto.</description>
   ${items}
 </channel>
 </rss>`;

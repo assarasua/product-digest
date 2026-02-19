@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Acerca de Product Digest",
-  description: "Acerca de Product Digest y su enfoque con IA."
+  description: "Acerca de Product Digest y su enfoque con IA.",
+  alternates: {
+    canonical: "/about"
+  }
 };
 
 export default function AboutPage() {
@@ -22,8 +25,8 @@ export default function AboutPage() {
         explicar conceptos complejos de forma divulgativa para que cualquier PM pueda aplicarlos en su contexto real.
       </p>
       <p>
-        Encontraras ejemplos concretos como: como priorizar cuando faltan datos, como diseñar experimentos de producto
-        en equipos pequeños, y como convertir feedback de usuarios en decisiones de roadmap más sólidas.
+        Encontrarás ejemplos concretos como: cómo priorizar cuando faltan datos, cómo diseñar experimentos de producto
+        en equipos pequeños, y cómo convertir feedback de usuarios en decisiones de roadmap más sólidas.
       </p>
       <p>
         El objetivo no es solo escribir, sino construir una base de conocimiento útil para hacer mejor producto bajo

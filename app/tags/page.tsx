@@ -5,7 +5,10 @@ import { getAllTags } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Temas",
-  description: "Explora los artículos por tema."
+  description: "Explora los artículos por tema.",
+  alternates: {
+    canonical: "/tags"
+  }
 };
 
 export default function TagsPage() {
@@ -14,7 +17,7 @@ export default function TagsPage() {
   return (
     <div className="page-wrap slim">
       <h1>Temas</h1>
-      <p className="page-intro">Navega por area de interes.</p>
+      <p className="page-intro">Navega por área de interés.</p>
       <div className="tag-cloud">
         {tags.map(({ tag, count }) => (
           <div key={tag} className="tag-with-count">

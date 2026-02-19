@@ -1,0 +1,28 @@
+# Product Digest
+
+Product Digest es un blog en español sobre gestión de producto, AI PM y estrategia SaaS para equipos en crecimiento.
+
+## Qué encontrarás
+- Marcos de decisión de producto aplicables en startups.
+- Guías de discovery, priorización, pricing, go-to-market y retención.
+- Artículos diarios con ejemplos operativos y tradeoffs.
+
+## Rutas clave
+- Inicio: https://productdigest.es/
+- Artículos: https://productdigest.es/post/
+- Temas: https://productdigest.es/tags
+- Archivo: https://productdigest.es/archive
+- Buscar: https://productdigest.es/search
+- Acerca de: https://productdigest.es/about
+
+## Feeds y mapas
+- RSS: https://productdigest.es/rss.xml
+- Sitemap: https://productdigest.es/sitemap.xml
+
+## Idioma y formato
+- Idioma principal: es-ES
+- Formato: artículos editoriales con foco práctico para PMs
+
+## Política de contenido
+- Parte del contenido se genera con apoyo de IA y edición humana.
+- El objetivo es divulgativo y operativo: ayudar a construir mejores productos con decisiones más claras.

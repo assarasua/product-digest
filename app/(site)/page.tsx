@@ -7,7 +7,10 @@ import { getAllPosts } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Inicio",
-  description: "Ultimos artículos sobre gestión de producto, AI PM y estrategia SaaS."
+  description: "Últimos artículos sobre gestión de producto, AI PM y estrategia SaaS.",
+  alternates: {
+    canonical: "/"
+  }
 };
 
 export default function HomePage() {

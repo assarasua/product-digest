@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 import { getAllPosts, getAllTags } from "@/lib/content";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://productdigest.es";
 
   const staticPages = ["", "/tags", "/archive", "/search", "/about"].map((path) => ({
     url: `${siteUrl}${path}`,

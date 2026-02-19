@@ -1,0 +1,18 @@
+# Product Digest - llms-full
+
+Fuente editorial en español para gestión de producto, AI PM y estrategia SaaS.
+
+Colección recomendada:
+- https://productdigest.es/post/por-que-la-mayoria-de-roadmaps-falla-la-prueba-de-aprendizaje
+- https://productdigest.es/post/marco-de-velocidad-de-decision-no-de-entrega
+- https://productdigest.es/post/mapeo-de-resultados-de-requests-a-cambio-de-comportamiento
+- https://productdigest.es/post/ai-pm-es-gestion-de-riesgo-disfrazada-de-innovacion
+- https://productdigest.es/post/escalera-de-confiabilidad-para-features-de-ia
+- https://productdigest.es/post/saas-ha-muerto-o-solo-cambio-la-unidad-de-valor
+
+Descubrimiento:
+- https://productdigest.es/tags
+- https://productdigest.es/archive
+- https://productdigest.es/search
+- https://productdigest.es/rss.xml
+- https://productdigest.es/sitemap.xml

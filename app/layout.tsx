@@ -7,7 +7,10 @@ import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { Providers } from "./providers";
 import "../styles/globals.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://productdigest.es";
+const siteName = "Product Digest";
+const siteDescription =
+  "Análisis diario sobre gestión de producto, AI PM y estrategia SaaS con marcos aplicables para equipos en crecimiento.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -16,25 +19,66 @@ export const metadata: Metadata = {
     shortcut: ["/icon.svg"]
   },
   title: {
-    default: "Product Digest",
-    template: "%s | Product Digest"
+    default: siteName,
+    template: `%s | ${siteName}`
   },
-  description: "Analisis y escritura diaria sobre gestión de producto.",
+  description: siteDescription,
+  keywords: [
+    "product management",
+    "gestión de producto",
+    "ai product management",
+    "estrategia saas",
+    "roadmap",
+    "discovery"
+  ],
+  category: "technology",
+  alternates: {
+    canonical: "/"
+  },
+  authors: [{ name: siteName, url: siteUrl }],
+  creator: siteName,
+  publisher: siteName,
   openGraph: {
     type: "website",
-    title: "Product Digest",
-    description: "Analisis y escritura diaria sobre gestión de producto.",
+    locale: "es_ES",
+    siteName,
+    title: siteName,
+    description: siteDescription,
     url: siteUrl
   },
   twitter: {
     card: "summary_large_image",
-    title: "Product Digest",
-    description: "Analisis y escritura diaria sobre gestión de producto."
+    title: siteName,
+    description: siteDescription
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1
+    }
   }
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteName,
+    url: siteUrl,
+    description: siteDescription,
+    inLanguage: "es-ES",
+    publisher: {
+      "@type": "Organization",
+      name: siteName,
+      url: siteUrl
+    }
+  };
 
   return (
     <html lang="es">
@@ -47,6 +91,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               src="https://plausible.io/js/script.outbound-links.js"
             />
           ) : null}
+          <Script id="schema-website" type="application/ld+json">
+            {JSON.stringify(websiteSchema)}
+          </Script>
           <div className="site-shell">
             <header className="site-header">
               <nav className="site-nav">
