@@ -101,6 +101,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   Product Digest
                 </Link>
                 <div className="nav-links">
+                  <Link href="/product-leaders-wiki">Wiki Product Leaders</Link>
                   <Link href="/tags">Temas</Link>
                   <Link href="/archive">Archivo</Link>
                   <Link href="/search">Buscar</Link>

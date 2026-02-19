@@ -97,6 +97,9 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         title={post.title}
         slug={post.slug}
         summary={post.summary}
+        coverImage={post.coverImage}
+        imageDescription={post.imageDescription}
+        imageLink={post.imageLink}
         date={post.date}
         updatedAt={post.updatedAt}
         readingTimeMinutes={post.readingTimeMinutes}

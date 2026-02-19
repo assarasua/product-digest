@@ -11,6 +11,9 @@ export function ArticleLayout({
   title,
   slug,
   summary,
+  coverImage,
+  imageDescription,
+  imageLink,
   date,
   updatedAt,
   readingTimeMinutes,
@@ -21,6 +24,9 @@ export function ArticleLayout({
   title: string;
   slug: string;
   summary: string;
+  coverImage?: string;
+  imageDescription?: string;
+  imageLink?: string;
   date: string;
   updatedAt?: string;
   readingTimeMinutes: number;
@@ -38,6 +44,30 @@ export function ArticleLayout({
           </p>
           <h1>{title}</h1>
           <p className="summary">{summary}</p>
+          {coverImage ? (
+            <figure className="article-cover">
+              {imageLink ? (
+                <a href={imageLink} target="_blank" rel="noopener noreferrer">
+                  <img src={coverImage} alt={imageDescription || title} loading="lazy" />
+                </a>
+              ) : (
+                <img src={coverImage} alt={imageDescription || title} loading="lazy" />
+              )}
+              {imageDescription || imageLink ? (
+                <figcaption>
+                  {imageDescription ? <span>{imageDescription}</span> : null}
+                  {imageLink ? (
+                    <>
+                      {" "}
+                      <a href={imageLink} target="_blank" rel="noopener noreferrer">
+                        Ver fuente
+                      </a>
+                    </>
+                  ) : null}
+                </figcaption>
+              ) : null}
+            </figure>
+          ) : null}
           <LikeButton slug={slug} />
           {updatedAt ? <p className="updated-at">Actualizado el {formatDate(updatedAt)}</p> : null}
           <div className="tag-row">

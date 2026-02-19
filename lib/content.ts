@@ -21,6 +21,8 @@ const frontmatterSchema = z.object({
   tags: z.array(z.string().min(1)),
   draft: z.boolean().optional().default(false),
   coverImage: z.string().optional(),
+  imageDescription: z.string().optional(),
+  imageLink: z.string().optional(),
   updatedAt: dateFieldSchema.optional()
 });
 

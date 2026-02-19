@@ -5,7 +5,7 @@ import { getAllPosts, getAllTags } from "@/lib/content";
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://productdigest.es";
 
-  const staticPages = ["", "/tags", "/archive", "/search", "/about"].map((path) => ({
+  const staticPages = ["", "/product-leaders-wiki", "/tags", "/archive", "/search", "/about"].map((path) => ({
     url: `${siteUrl}${path}`,
     lastModified: new Date()
   }));
