@@ -33,7 +33,7 @@ npm run publish:next-draft:push
 Example cron (daily at 09:00):
 
 ```bash
-0 9 * * * cd /Users/axi/Documents/product-digest && /opt/homebrew/bin/node scripts/publish-next-draft-push.mjs >> /Users/axi/Documents/product-digest/logs/publish-cron.log 2>&1
+0 9 * * * cd /Users/axi/Documents/product-digest && PUBLISH_GIT_SSH_KEY=/Users/axi/.ssh/id_ed25519_product_digest_3 /opt/homebrew/bin/node scripts/publish-next-draft-push.mjs >> /Users/axi/Documents/product-digest/logs/publish-cron.log 2>&1
 ```
 
 ## Build outputs
@@ -76,8 +76,11 @@ npm run build:local
 
 - `NEXT_PUBLIC_SITE_URL` for canonical URLs and feed/sitemap links.
 - `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to enable Plausible outbound-links analytics.
-- `NEWSLETTER_SUBSCRIBE_API_URL` for newsletter signup persistence from Edge runtime.
-- `NEXT_PUBLIC_NEWSLETTER_SUBSCRIBE_API_URL` for client-side signup calls when deploying static assets.
+- `PUBLISH_GIT_REMOTE` optional (default `origin`) for cron publish script.
+- `PUBLISH_GIT_BRANCH` optional (default `main`) for cron publish script.
+- `PUBLISH_GIT_SSH_KEY` optional SSH private key path for cron non-interactive push.
+- `PUBLISH_GIT_USER_NAME` optional fallback git user name for cron commit.
+- `PUBLISH_GIT_USER_EMAIL` optional fallback git user email for cron commit.
 
 ## Cloudflare Deploy (Wrangler)
 
@@ -134,8 +137,8 @@ Server endpoints:
 
 ### Connect frontend (Cloudflare)
 
-Set this environment variable in your Cloudflare project:
+The frontend currently posts directly to:
 
 ```bash
-NEWSLETTER_SUBSCRIBE_API_URL=https://<your-railway-domain>/api/subscribe
+https://api.productdigest.es/api/subscribers
 ```
