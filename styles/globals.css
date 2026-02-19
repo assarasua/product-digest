@@ -339,33 +339,75 @@ h3 {
 
 .leaders-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 1rem;
-  margin-top: 1.2rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.1rem;
+  margin-top: 1.3rem;
 }
 
 .leader-card {
   display: grid;
-  grid-template-columns: 92px 1fr;
-  gap: 0.85rem;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 0.85rem;
-  background: color-mix(in srgb, var(--paper), white 25%);
+  grid-template-columns: 108px 1fr;
+  gap: 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--line), white 10%);
+  border-radius: 16px;
+  padding: 0.95rem;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--paper), white 35%), color-mix(in srgb, var(--paper), white 22%));
+  box-shadow: 0 12px 26px rgba(31, 33, 27, 0.06);
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.leader-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(31, 33, 27, 0.09);
+  border-color: color-mix(in srgb, var(--accent), white 65%);
 }
 
 .leader-card img {
-  width: 92px;
-  height: 92px;
-  border-radius: 10px;
+  width: 108px;
+  height: 108px;
+  border-radius: 12px;
   object-fit: cover;
   border: 1px solid var(--line);
 }
 
+.leader-card-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 108px;
+}
+
 .leader-card h2 {
   margin: 0.12rem 0 0.3rem;
-  font-size: 1.1rem;
+  font-size: 1.12rem;
   line-height: 1.25;
+}
+
+.leader-card .summary {
+  font-size: 0.96rem;
+}
+
+.leader-card-cta {
+  margin-top: auto;
+  padding-top: 0.7rem;
+}
+
+.leader-profile-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent), white 55%);
+  color: color-mix(in srgb, var(--accent), black 15%);
+  background: var(--accent-soft);
+  font-size: 0.86rem;
+  font-weight: 600;
+  padding: 0.28rem 0.82rem;
+}
+
+.leader-profile-button:hover {
+  background: color-mix(in srgb, var(--accent-soft), white 25%);
 }
 
 .search-wrap {
@@ -656,6 +698,21 @@ h3 {
   .post-card {
     border-radius: 12px;
     padding: 1rem;
+  }
+
+  .leaders-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .leader-card {
+    grid-template-columns: 86px 1fr;
+    gap: 0.75rem;
+    padding: 0.8rem;
+  }
+
+  .leader-card img {
+    height: 86px;
+    width: 86px;
   }
 
   .prose-content {

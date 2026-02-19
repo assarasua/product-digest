@@ -26,7 +26,7 @@ export default function HomePage() {
           Este blog reúne marcos, decisiones y análisis aplicables para equipos de producto en etapa de crecimiento.
         </p>
         <p>
-          <Link href="/product-leaders-wiki">Ir a la Wiki para Product Leaders</Link>
+          <Link href="/product-leaders-wiki">Ir a Product Leaders</Link>
         </p>
       </section>
 

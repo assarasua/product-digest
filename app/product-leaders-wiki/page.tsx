@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Wiki para Product Leaders",
+  title: "Product Leaders",
   description: "Top 50 Product Leaders: nombre, apellido, imagen, descripción y perfil.",
   alternates: {
     canonical: "/product-leaders-wiki"
@@ -46,26 +46,26 @@ export default async function ProductLeadersWikiPage() {
 
   return (
     <div className="page-wrap">
-      <h1>Wiki para Product Leaders</h1>
+      <h1>Product Leaders</h1>
       <p className="page-intro">
         Base de datos de líderes de producto con perfil, imagen y descripción para investigación rápida.
       </p>
 
       {leaders.length === 0 ? (
-        <p className="summary">Aún no hay datos cargados. Ejecuta el importador para poblar esta sección.</p>
+        <p className="summary">Aún no hay datos cargados para Product Leaders.</p>
       ) : (
-        <section className="leaders-grid" aria-label="Top Product Leaders">
+        <section className="leaders-grid" aria-label="Product Leaders">
           {leaders.map((leader) => (
             <article key={`${leader.rank}-${leader.profile_url}`} className="leader-card">
               <img src={leader.image_url} alt={`${leader.first_name} ${leader.last_name}`.trim()} loading="lazy" />
-              <div>
+              <div className="leader-card-body">
                 <p className="meta-row">#{leader.rank}</p>
                 <h2>
                   {leader.first_name} {leader.last_name}
                 </h2>
                 <p className="summary">{leader.description}</p>
-                <p>
-                  <a href={leader.profile_url} target="_blank" rel="noopener noreferrer">
+                <p className="leader-card-cta">
+                  <a className="leader-profile-button" href={leader.profile_url} target="_blank" rel="noopener noreferrer">
                     Ver perfil
                   </a>
                 </p>
