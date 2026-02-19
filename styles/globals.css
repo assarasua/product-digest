@@ -205,6 +205,17 @@ a {
   cursor: pointer;
 }
 
+.like-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  line-height: 1;
+  color: #d14848;
+}
+
 .like-button:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--accent), white 50%);
 }
@@ -215,9 +226,9 @@ a {
 }
 
 .like-button.is-liked {
-  color: color-mix(in srgb, var(--accent), black 20%);
-  border-color: color-mix(in srgb, var(--accent), white 45%);
-  background: var(--accent-soft);
+  color: #c62525;
+  border-color: color-mix(in srgb, #c62525, white 55%);
+  background: color-mix(in srgb, #ffefef, white 25%);
 }
 
 .like-count {

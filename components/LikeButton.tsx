@@ -80,11 +80,13 @@ export function LikeButton({ slug }: LikeButtonProps) {
     <div className="like-row" aria-live="polite">
       <button
         type="button"
-        className={`like-button${liked ? " is-liked" : ""}`}
+        className={`like-button like-icon${liked ? " is-liked" : ""}`}
         disabled={liked || submitting || loading}
         onClick={handleLike}
+        aria-label={liked ? "Ya te gusta este artículo" : "Dar me gusta a este artículo"}
+        title={liked ? "Ya te gusta" : "Me gusta"}
       >
-        {liked ? "Te gusta" : submitting ? "Guardando..." : "Me gusta"}
+        <span aria-hidden="true">{liked ? "❤" : "♡"}</span>
       </button>
       <span className="like-count">
         {loading ? "Cargando..." : `${likes} ${likes === 1 ? "me gusta" : "me gustas"}`}
