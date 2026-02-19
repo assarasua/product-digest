@@ -52,9 +52,16 @@ if (!upstreamCheck.ok) {
   );
 }
 
-const publish = run("node", ["scripts/publish-next-draft.mjs"], { env: executionEnv });
+const publish = run(process.execPath, ["scripts/publish-next-draft.mjs"], { env: executionEnv });
 if (publish.status !== 0) {
-  fail("failed publishing next draft.");
+  const reason = [
+    `status=${publish.status ?? "null"}`,
+    publish.signal ? `signal=${publish.signal}` : null,
+    publish.error ? `error=${publish.error.message}` : null
+  ]
+    .filter(Boolean)
+    .join(", ");
+  fail(`failed publishing next draft${reason ? ` (${reason})` : ""}.`);
 }
 
 const status = runCapture("git", ["status", "--porcelain"], { env: executionEnv });

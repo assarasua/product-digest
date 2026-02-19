@@ -5,6 +5,7 @@ import matter from "gray-matter";
 
 const postsDir = path.join(process.cwd(), "content/posts");
 const searchIndexScript = path.join(process.cwd(), "scripts/generate-search-index.mjs");
+const skipSearchIndex = process.env.PUBLISH_SKIP_SEARCH_INDEX === "1";
 
 function toDateString(value) {
   if (!value) {
@@ -57,9 +58,9 @@ async function publishNextDraft() {
   fs.writeFileSync(next.fullPath, output);
 
   // Keep search index aligned when the site is served without a fresh build.
-  if (fs.existsSync(searchIndexScript)) {
+  if (!skipSearchIndex && fs.existsSync(searchIndexScript)) {
     const { spawnSync } = await import("node:child_process");
-    spawnSync("node", [searchIndexScript], { stdio: "inherit" });
+    spawnSync(process.execPath, [searchIndexScript], { stdio: "inherit" });
   }
 
   console.log(`Publicado: ${next.fileName}`);
