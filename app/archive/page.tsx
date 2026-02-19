@@ -3,12 +3,26 @@ import Link from "next/link";
 
 import { getArchive } from "@/lib/content";
 import { formatDate, formatMonth } from "@/lib/format";
+import { ogImageUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Archivo",
   description: "Explora artículos por mes.",
   alternates: {
     canonical: "/archive"
+  },
+  openGraph: {
+    title: "Archivo | Product Digest",
+    description: "Explora artículos por mes.",
+    url: "/archive",
+    type: "website",
+    images: [{ url: ogImageUrl("Archivo", "Navega por meses y publicaciones") }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Archivo | Product Digest",
+    description: "Explora artículos por mes.",
+    images: [ogImageUrl("Archivo", "Navega por meses y publicaciones")]
   }
 };
 

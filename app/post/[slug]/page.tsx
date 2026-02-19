@@ -6,6 +6,7 @@ import { ArticleLayout } from "@/components/ArticleLayout";
 import { ReadingProgress } from "@/components/ReadingProgress";
 import { compilePost } from "@/lib/compile-post";
 import { getAllPostSlugs, getPostBySlug } from "@/lib/content";
+import { absoluteUrl, getSiteUrl, ogImageUrl } from "@/lib/seo";
 
 export function generateStaticParams() {
   return getAllPostSlugs().map((slug) => ({ slug }));
@@ -21,14 +22,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
   }
 
-  const postUrl = `/post/${post.slug}`;
-  const imageUrl = post.coverImage || undefined;
+  const postUrl = absoluteUrl(`/post/${post.slug}`);
+  const imageUrl = post.coverImage ? absoluteUrl(post.coverImage) : ogImageUrl(post.title, post.summary);
 
   return {
     title: post.title,
     description: post.summary,
     alternates: {
-      canonical: postUrl
+      canonical: `/post/${post.slug}`
     },
     openGraph: {
       title: post.title,
@@ -43,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       images: imageUrl ? [{ url: imageUrl, alt: post.imageDescription || post.title }] : undefined
     },
     twitter: {
-      card: imageUrl ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: post.title,
       description: post.summary,
       images: imageUrl ? [imageUrl] : undefined
@@ -66,7 +67,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   }
 
   const content = await compilePost(post);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://productdigest.es";
+  const siteUrl = getSiteUrl();
   const postUrl = `${siteUrl}/post/${post.slug}`;
   const articleSchema = {
     "@context": "https://schema.org",

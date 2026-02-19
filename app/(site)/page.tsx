@@ -5,12 +5,26 @@ import { Suspense } from "react";
 import { HomeFeedPagination } from "@/components/HomeFeedPagination";
 import { PostCard } from "@/components/PostCard";
 import { getAllPosts } from "@/lib/content";
+import { ogImageUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Inicio",
   description: "Últimos artículos sobre gestión de producto, AI PM y estrategia SaaS.",
   alternates: {
     canonical: "/"
+  },
+  openGraph: {
+    title: "Product Digest",
+    description: "Últimos artículos sobre gestión de producto, AI PM y estrategia SaaS.",
+    url: "/",
+    type: "website",
+    images: [{ url: ogImageUrl("Product Digest", "Ideas prácticas para construir mejores productos") }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Product Digest",
+    description: "Últimos artículos sobre gestión de producto, AI PM y estrategia SaaS.",
+    images: [ogImageUrl("Product Digest", "Ideas prácticas para construir mejores productos")]
   }
 };
 

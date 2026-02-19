@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ogImageUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Product Leaders",
@@ -14,13 +15,15 @@ export const metadata: Metadata = {
     url: "/product-leaders-wiki",
     type: "website",
     locale: "es_ES",
-    siteName: "Product Digest"
+    siteName: "Product Digest",
+    images: [{ url: ogImageUrl("Product Leaders", "Referentes globales de gestión de producto") }]
   },
   twitter: {
     card: "summary_large_image",
     title: "Product Leaders",
     description:
-      "Product Leaders reúne referentes de gestión de producto a nivel mundial: perfiles, contexto profesional y enlaces para seguir sus ideas y tendencias."
+      "Product Leaders reúne referentes de gestión de producto a nivel mundial: perfiles, contexto profesional y enlaces para seguir sus ideas y tendencias.",
+    images: [ogImageUrl("Product Leaders", "Referentes globales de gestión de producto")]
   }
 };
 

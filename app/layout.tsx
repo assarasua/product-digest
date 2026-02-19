@@ -4,6 +4,7 @@ import Script from "next/script";
 import type { ReactNode } from "react";
 
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { ogImageUrl } from "@/lib/seo";
 import { Providers } from "./providers";
 import "../styles/globals.css";
 
@@ -44,12 +45,18 @@ export const metadata: Metadata = {
     siteName,
     title: siteName,
     description: siteDescription,
-    url: siteUrl
+    url: siteUrl,
+    images: [
+      {
+        url: ogImageUrl("Product Digest", "Análisis diario sobre gestión de producto")
+      }
+    ]
   },
   twitter: {
     card: "summary_large_image",
     title: siteName,
-    description: siteDescription
+    description: siteDescription,
+    images: [ogImageUrl("Product Digest", "Análisis diario sobre gestión de producto")]
   },
   robots: {
     index: true,

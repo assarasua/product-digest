@@ -1,10 +1,24 @@
 import type { Metadata } from "next";
+import { ogImageUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Acerca de Product Digest",
   description: "Acerca de Product Digest y su enfoque con IA.",
   alternates: {
     canonical: "/about"
+  },
+  openGraph: {
+    title: "Acerca de Product Digest",
+    description: "Acerca de Product Digest y su enfoque con IA.",
+    url: "/about",
+    type: "website",
+    images: [{ url: ogImageUrl("Acerca de Product Digest", "Misión editorial y enfoque práctico") }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Acerca de Product Digest",
+    description: "Acerca de Product Digest y su enfoque con IA.",
+    images: [ogImageUrl("Acerca de Product Digest", "Misión editorial y enfoque práctico")]
   }
 };
 
