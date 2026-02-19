@@ -57,6 +57,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       <ReadingProgress />
       <ArticleLayout
         title={post.title}
+        slug={post.slug}
         summary={post.summary}
         date={post.date}
         updatedAt={post.updatedAt}

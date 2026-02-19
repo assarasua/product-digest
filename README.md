@@ -133,6 +133,9 @@ DATABASE_URL="postgresql://..." npm run backend:start
 
 Server endpoints:
 - `POST /api/subscribe`
+- `POST /api/subscribers`
+- `GET /api/likes?slug=<post-slug>`
+- `POST /api/likes` with body `{ "slug": "<post-slug>" }`
 - `GET /healthz`
 
 ### Connect frontend (Cloudflare)

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { BackButton } from "@/components/BackButton";
+import { LikeButton } from "@/components/LikeButton";
 import { TagPill } from "@/components/TagPill";
 import { TableOfContents } from "@/components/TableOfContents";
 import type { Heading } from "@/lib/content";
@@ -8,6 +9,7 @@ import { formatDate } from "@/lib/format";
 
 export function ArticleLayout({
   title,
+  slug,
   summary,
   date,
   updatedAt,
@@ -17,6 +19,7 @@ export function ArticleLayout({
   children
 }: {
   title: string;
+  slug: string;
   summary: string;
   date: string;
   updatedAt?: string;
@@ -35,6 +38,7 @@ export function ArticleLayout({
           </p>
           <h1>{title}</h1>
           <p className="summary">{summary}</p>
+          <LikeButton slug={slug} />
           {updatedAt ? <p className="updated-at">Actualizado el {formatDate(updatedAt)}</p> : null}
           <div className="tag-row">
             {tags.map((tag) => (

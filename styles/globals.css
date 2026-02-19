@@ -188,6 +188,43 @@ a {
   line-height: 1.65;
 }
 
+.like-row {
+  margin-top: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.like-button {
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper), white 25%);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.28rem 0.72rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.like-button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent), white 50%);
+}
+
+.like-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.like-button.is-liked {
+  color: color-mix(in srgb, var(--accent), black 20%);
+  border-color: color-mix(in srgb, var(--accent), white 45%);
+  background: var(--accent-soft);
+}
+
+.like-count {
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;

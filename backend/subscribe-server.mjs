@@ -23,6 +23,14 @@ await pool.query(`
   )
 `);
 
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS post_likes (
+    slug TEXT PRIMARY KEY,
+    likes_count INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )
+`);
+
 function send(res, status, payload) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -35,6 +43,21 @@ function send(res, status, payload) {
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isValidSlug(value) {
+  return /^[a-z0-9-]{3,200}$/.test(value);
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+    req.on("end", () => resolve(body));
+    req.on("error", reject);
+  });
 }
 
 const server = http.createServer(async (req, res) => {
@@ -55,6 +78,53 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === "GET" && parsed.pathname === "/api/likes") {
+    const slug = String(parsed.searchParams.get("slug") || "").trim().toLowerCase();
+
+    if (!slug || !isValidSlug(slug)) {
+      send(res, 400, { error: "invalid_slug" });
+      return;
+    }
+
+    try {
+      const result = await pool.query("SELECT likes_count FROM post_likes WHERE slug = $1", [slug]);
+      const likes = result.rows[0]?.likes_count ?? 0;
+      send(res, 200, { slug, likes });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "POST" && parsed.pathname === "/api/likes") {
+    try {
+      const body = await readBody(req);
+      const payload = JSON.parse(body || "{}");
+      const slug = String(payload.slug || "").trim().toLowerCase();
+
+      if (!slug || !isValidSlug(slug)) {
+        send(res, 400, { error: "invalid_slug" });
+        return;
+      }
+
+      const result = await pool.query(
+        `INSERT INTO post_likes (slug, likes_count, updated_at)
+         VALUES ($1, 1, NOW())
+         ON CONFLICT (slug)
+         DO UPDATE SET likes_count = post_likes.likes_count + 1, updated_at = NOW()
+         RETURNING likes_count`,
+        [slug]
+      );
+
+      send(res, 200, { ok: true, slug, likes: result.rows[0]?.likes_count ?? 1 });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
   const isSubscribePath =
     parsed.pathname === "/api/subscribers" ||
     parsed.pathname === "/api/subscribe" ||
@@ -65,36 +135,30 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  let body = "";
-  req.on("data", (chunk) => {
-    body += chunk;
-  });
+  try {
+    const body = await readBody(req);
+    const payload = JSON.parse(body || "{}");
+    const email = String(payload.email || "").trim().toLowerCase();
 
-  req.on("end", async () => {
-    try {
-      const payload = JSON.parse(body || "{}");
-      const email = String(payload.email || "").trim().toLowerCase();
-
-      if (!email || !isValidEmail(email)) {
-        send(res, 400, { error: "invalid_email" });
-        return;
-      }
-
-      const result = await pool.query(
-        "INSERT INTO subscribers (email) VALUES ($1) ON CONFLICT (email) DO NOTHING RETURNING id",
-        [email]
-      );
-
-      if (result.rowCount === 0) {
-        send(res, 409, { error: "duplicate" });
-        return;
-      }
-
-      send(res, 200, { ok: true });
-    } catch {
-      send(res, 500, { error: "db_error" });
+    if (!email || !isValidEmail(email)) {
+      send(res, 400, { error: "invalid_email" });
+      return;
     }
-  });
+
+    const result = await pool.query(
+      "INSERT INTO subscribers (email) VALUES ($1) ON CONFLICT (email) DO NOTHING RETURNING id",
+      [email]
+    );
+
+    if (result.rowCount === 0) {
+      send(res, 409, { error: "duplicate" });
+      return;
+    }
+
+    send(res, 200, { ok: true });
+  } catch {
+    send(res, 500, { error: "db_error" });
+  }
 });
 
 server.listen(port, "0.0.0.0", () => {
