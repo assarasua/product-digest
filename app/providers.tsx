@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { InfiniteWatchProvider } from "@infinitewatch/next";
 
 const orgId = process.env.NEXT_PUBLIC_INFINITEWATCH_ORG_ID;
+const infiniteWatchSamplingPercent = 100;
 
 function SessionDebugLogger() {
   useEffect(() => {
@@ -14,6 +15,7 @@ function SessionDebugLogger() {
 
     console.log(`${prefix} provider initialized`, {
       organizationId: orgId ?? "missing",
+      samplingPercent: infiniteWatchSamplingPercent,
       path: window.location.pathname,
       startedAt
     });
@@ -61,7 +63,7 @@ export function Providers({ children }: { children: ReactNode }) {
   }
 
   return (
-    <InfiniteWatchProvider organizationId={orgId}>
+    <InfiniteWatchProvider organizationId={orgId} defaultSamplingPercent={infiniteWatchSamplingPercent}>
       <SessionDebugLogger />
       {children}
     </InfiniteWatchProvider>
