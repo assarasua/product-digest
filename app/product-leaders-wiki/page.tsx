@@ -6,6 +6,21 @@ export const metadata: Metadata = {
     "Product Leaders reúne referentes de gestión de producto a nivel mundial: perfiles, contexto profesional y enlaces para seguir sus ideas y tendencias.",
   alternates: {
     canonical: "/product-leaders-wiki"
+  },
+  openGraph: {
+    title: "Product Leaders",
+    description:
+      "Product Leaders reúne referentes de gestión de producto a nivel mundial: perfiles, contexto profesional y enlaces para seguir sus ideas y tendencias.",
+    url: "/product-leaders-wiki",
+    type: "website",
+    locale: "es_ES",
+    siteName: "Product Digest"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Product Leaders",
+    description:
+      "Product Leaders reúne referentes de gestión de producto a nivel mundial: perfiles, contexto profesional y enlaces para seguir sus ideas y tendencias."
   }
 };
 

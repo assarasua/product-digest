@@ -22,6 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   const postUrl = `/post/${post.slug}`;
+  const imageUrl = post.coverImage || undefined;
 
   return {
     title: post.title,
@@ -38,12 +39,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       modifiedTime: post.updatedAt ?? post.date,
       tags: post.tags,
       siteName: "Product Digest",
-      locale: "es_ES"
+      locale: "es_ES",
+      images: imageUrl ? [{ url: imageUrl, alt: post.imageDescription || post.title }] : undefined
     },
     twitter: {
-      card: "summary_large_image",
+      card: imageUrl ? "summary_large_image" : "summary",
       title: post.title,
-      description: post.summary
+      description: post.summary,
+      images: imageUrl ? [imageUrl] : undefined
     },
     other: {
       "article:published_time": post.date,
