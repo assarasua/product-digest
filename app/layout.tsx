@@ -4,6 +4,7 @@ import Script from "next/script";
 import type { ReactNode } from "react";
 
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { Providers } from "./providers";
 import "../styles/globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
@@ -38,32 +39,34 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body>
-        {plausibleDomain ? (
-          <Script
-            defer
-            data-domain={plausibleDomain}
-            src="https://plausible.io/js/script.outbound-links.js"
-          />
-        ) : null}
-        <div className="site-shell">
-          <header className="site-header">
-            <nav className="site-nav">
-              <Link href="/" className="brand-link">
-                Product Digest
-              </Link>
-              <div className="nav-links">
-                <Link href="/tags">Temas</Link>
-                <Link href="/archive">Archivo</Link>
-                <Link href="/search">Buscar</Link>
-                <Link href="/about">Acerca de Product Digest</Link>
-              </div>
-            </nav>
-          </header>
-          <main>{children}</main>
-          <div className="page-wrap">
-            <NewsletterSignup />
+        <Providers>
+          {plausibleDomain ? (
+            <Script
+              defer
+              data-domain={plausibleDomain}
+              src="https://plausible.io/js/script.outbound-links.js"
+            />
+          ) : null}
+          <div className="site-shell">
+            <header className="site-header">
+              <nav className="site-nav">
+                <Link href="/" className="brand-link">
+                  Product Digest
+                </Link>
+                <div className="nav-links">
+                  <Link href="/tags">Temas</Link>
+                  <Link href="/archive">Archivo</Link>
+                  <Link href="/search">Buscar</Link>
+                  <Link href="/about">Acerca de Product Digest</Link>
+                </div>
+              </nav>
+            </header>
+            <main>{children}</main>
+            <div className="page-wrap">
+              <NewsletterSignup />
+            </div>
           </div>
-        </div>
+        </Providers>
       </body>
     </html>
   );
