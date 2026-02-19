@@ -34,14 +34,14 @@ export function SearchClient() {
   return (
     <section className="search-wrap">
       <label htmlFor="search-input" className="search-label">
-        Buscar articulos
+        Buscar artículos
       </label>
       <input
         id="search-input"
         autoFocus
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Prueba: priorizacion, onboarding, roadmap..."
+        placeholder="Prueba: priorización, onboarding, roadmap..."
         className="search-input"
       />
 

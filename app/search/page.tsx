@@ -4,7 +4,7 @@ import { SearchClient } from "@/components/SearchClient";
 
 export const metadata: Metadata = {
   title: "Buscar",
-  description: "Busca en todos los articulos de la bitacora."
+  description: "Busca en todos los artículos del blog."
 };
 
 export default function SearchPage() {

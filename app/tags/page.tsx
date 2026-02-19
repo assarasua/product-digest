@@ -5,7 +5,7 @@ import { getAllTags } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Temas",
-  description: "Explora los articulos por tema."
+  description: "Explora los artículos por tema."
 };
 
 export default function TagsPage() {

@@ -6,7 +6,7 @@ import { formatDate, formatMonth } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Archivo",
-  description: "Explora articulos por mes."
+  description: "Explora artículos por mes."
 };
 
 export default function ArchivePage() {

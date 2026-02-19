@@ -18,17 +18,17 @@ export const metadata: Metadata = {
     default: "Product Digest",
     template: "%s | Product Digest"
   },
-  description: "Analisis y escritura diaria sobre gestion de producto.",
+  description: "Analisis y escritura diaria sobre gestión de producto.",
   openGraph: {
     type: "website",
     title: "Product Digest",
-    description: "Analisis y escritura diaria sobre gestion de producto.",
+    description: "Analisis y escritura diaria sobre gestión de producto.",
     url: siteUrl
   },
   twitter: {
     card: "summary_large_image",
     title: "Product Digest",
-    description: "Analisis y escritura diaria sobre gestion de producto."
+    description: "Analisis y escritura diaria sobre gestión de producto."
   }
 };
 

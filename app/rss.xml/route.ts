@@ -33,7 +33,7 @@ export async function GET() {
 <channel>
   <title>Product Digest</title>
   <link>${siteUrl}</link>
-  <description>Analisis y escritura diaria sobre gestion de producto.</description>
+  <description>Analisis y escritura diaria sobre gestión de producto.</description>
   ${items}
 </channel>
 </rss>`;

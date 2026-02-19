@@ -19,13 +19,13 @@ export function HomeFeedPagination({ posts }: { posts: Post[] }) {
 
   return (
     <>
-      <section className="feed-grid" aria-label="Ultimos articulos">
+      <section className="feed-grid" aria-label="Ultimos artículos">
         {visiblePosts.map((post, index) => (
           <PostCard key={post.slug} post={post} index={index} />
         ))}
       </section>
 
-      <nav className="pagination" aria-label="Paginacion de articulos">
+      <nav className="pagination" aria-label="Paginacion de artículos">
         {currentPage > 1 ? (
           <Link className="pagination-link" href={currentPage - 1 === 1 ? "/" : `/?page=${currentPage - 1}`}>
             ← Anterior

@@ -10,7 +10,7 @@ export default function AboutPage() {
     <div className="page-wrap slim">
       <h1>Acerca de Product Digest</h1>
       <p className="page-intro">
-        Este sitio recopila analisis de gestion de producto, AI PM, estrategia SaaS y marcos operativos para equipos en
+        Este sitio recopila análisis de gestión de producto, AI PM, estrategia SaaS y marcos operativos para equipos en
         crecimiento.
       </p>
       <p>
@@ -18,15 +18,15 @@ export default function AboutPage() {
         accionables.
       </p>
       <p>
-        Parte del contenido se genera con IA y se edita para mantener claridad, rigor y utilidad practica. La idea es
+        Parte del contenido se genera con IA y se edita para mantener claridad, rigor y utilidad práctica. La idea es
         explicar conceptos complejos de forma divulgativa para que cualquier PM pueda aplicarlos en su contexto real.
       </p>
       <p>
         Encontraras ejemplos concretos como: como priorizar cuando faltan datos, como diseñar experimentos de producto
-        en equipos pequeños, y como convertir feedback de usuarios en decisiones de roadmap mas solidas.
+        en equipos pequeños, y como convertir feedback de usuarios en decisiones de roadmap más sólidas.
       </p>
       <p>
-        El objetivo no es solo escribir, sino construir una base de conocimiento util para hacer mejor producto bajo
+        El objetivo no es solo escribir, sino construir una base de conocimiento útil para hacer mejor producto bajo
         incertidumbre.
       </p>
     </div>

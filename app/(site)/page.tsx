@@ -7,7 +7,7 @@ import { getAllPosts } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Inicio",
-  description: "Ultimos articulos sobre gestion de producto, AI PM y estrategia SaaS."
+  description: "Ultimos artículos sobre gestión de producto, AI PM y estrategia SaaS."
 };
 
 export default function HomePage() {
@@ -17,15 +17,15 @@ export default function HomePage() {
     <div className="page-wrap">
       <section className="hero">
         <p className="eyebrow">Escritura diaria de producto</p>
-        <h1>Ideas practicas para construir mejores productos.</h1>
+        <h1>Ideas prácticas para construir mejores productos.</h1>
         <p>
-          Esta bitacora reune marcos, decisiones y analisis aplicables para equipos de producto en etapa de crecimiento.
+          Este blog reúne marcos, decisiones y análisis aplicables para equipos de producto en etapa de crecimiento.
         </p>
       </section>
 
       <Suspense
         fallback={
-          <section className="feed-grid" aria-label="Ultimos articulos">
+          <section className="feed-grid" aria-label="Ultimos artículos">
             {posts.slice(0, 5).map((post, index) => (
               <PostCard key={post.slug} post={post} index={index} />
             ))}
