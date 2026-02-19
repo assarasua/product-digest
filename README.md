@@ -2,6 +2,14 @@
 
 Medium-style product wiki for daily PM writing, built with Next.js + MDX.
 
+## Programming languages used
+
+- TypeScript (`.ts`, `.tsx`) for the Next.js app and most scripts.
+- JavaScript (ESM, `.mjs`) for automation/ops scripts and backend server runtime.
+- SQL (PostgreSQL) for persistence (subscribers, likes, product leaders).
+- CSS for styling and design system tokens.
+- MDX/Markdown for daily editorial content in `content/posts`.
+
 ## Quick start
 
 ```bash
