@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Product Leaders",
-  description: "Top 50 Product Leaders: nombre, apellido, imagen, descripción y perfil.",
+  description:
+    "Product Leaders reúne referentes de gestión de producto a nivel mundial: perfiles, contexto profesional y enlaces para seguir sus ideas y tendencias.",
   alternates: {
     canonical: "/product-leaders-wiki"
   }
@@ -48,7 +49,12 @@ export default async function ProductLeadersWikiPage() {
     <div className="page-wrap">
       <h1>Product Leaders</h1>
       <p className="page-intro">
-        Base de datos de líderes de producto con perfil, imagen y descripción para investigación rápida.
+        Product Leaders reúne a referentes de gestión de producto a nivel mundial: una selección curada de líderes que
+        están marcando cómo se diseña, prioriza y escala producto en empresas de alto impacto.
+      </p>
+      <p className="page-intro">
+        Aquí encontrarás sus perfiles, contexto profesional y enlaces para seguir sus ideas, detectar tendencias y
+        elevar tu criterio de producto con visión global.
       </p>
 
       {leaders.length === 0 ? (
