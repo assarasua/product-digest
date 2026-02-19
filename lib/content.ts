@@ -34,6 +34,7 @@ export type PostMeta = z.infer<typeof frontmatterSchema> & {
   slug: string;
   readingTimeMinutes: number;
   headings: Heading[];
+  previewText: string;
 };
 
 export type Post = PostMeta & {
@@ -73,6 +74,39 @@ function extractHeadings(content: string): Heading[] {
   return headings;
 }
 
+function stripMdx(content: string): string {
+  return content
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`[^`]*`/g, " ")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[*_~>#-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildPreviewText(summary: string, body: string): string {
+  const cleanSummary = summary.trim();
+  if (cleanSummary.length >= 90) {
+    return cleanSummary;
+  }
+
+  const cleanBody = stripMdx(body);
+  if (!cleanBody) {
+    return cleanSummary;
+  }
+
+  const maxChars = 220;
+  if (cleanBody.length <= maxChars) {
+    return cleanBody;
+  }
+
+  const sliced = cleanBody.slice(0, maxChars);
+  const end = sliced.lastIndexOf(" ");
+  return `${sliced.slice(0, end > 80 ? end : maxChars).trim()}...`;
+}
+
 function parsePostFile(fileName: string): Post {
   const fullPath = path.join(postsDir, fileName);
   const raw = fs.readFileSync(fullPath, "utf8");
@@ -93,6 +127,7 @@ function parsePostFile(fileName: string): Post {
     slug: toSlug(fileName),
     body: content,
     headings: extractHeadings(content),
+    previewText: buildPreviewText(parsed.data.summary, content),
     readingTimeMinutes: Math.max(1, Math.round(stats.minutes))
   };
 }

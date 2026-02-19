@@ -15,7 +15,7 @@ export function PostCard({ post, index }: { post: Post; index: number }) {
       <h2>
         <Link href={`/post/${post.slug}`}>{post.title}</Link>
       </h2>
-      <p className="summary">{post.summary}</p>
+      <p className="summary">{post.previewText}</p>
       <div className="tag-row">
         {post.tags.map((tag) => (
           <TagPill key={`${post.slug}-${tag}`} tag={tag} />
