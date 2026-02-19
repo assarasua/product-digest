@@ -31,6 +31,23 @@ await pool.query(`
   )
 `);
 
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS product_leaders (
+    id BIGSERIAL PRIMARY KEY,
+    rank INTEGER NOT NULL UNIQUE,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL DEFAULT '',
+    image_url TEXT NOT NULL,
+    description TEXT NOT NULL,
+    profile_url TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )
+`);
+
+await pool.query(`ALTER TABLE product_leaders DROP CONSTRAINT IF EXISTS product_leaders_profile_url_key`);
+
 function send(res, status, payload) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -90,6 +107,21 @@ const server = http.createServer(async (req, res) => {
       const result = await pool.query("SELECT likes_count FROM post_likes WHERE slug = $1", [slug]);
       const likes = result.rows[0]?.likes_count ?? 0;
       send(res, 200, { slug, likes });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "GET" && parsed.pathname === "/api/product-leaders") {
+    try {
+      const result = await pool.query(
+        `SELECT rank, first_name, last_name, image_url, description, profile_url, source_url
+         FROM product_leaders
+         ORDER BY rank ASC`
+      );
+      send(res, 200, { leaders: result.rows });
       return;
     } catch {
       send(res, 500, { error: "db_error" });

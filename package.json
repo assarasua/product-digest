@@ -31,7 +31,8 @@
     "publish:next-draft": "node scripts/publish-next-draft.mjs",
     "publish:next-draft:push": "node scripts/publish-next-draft-push.mjs",
     "check:api": "node scripts/check-api.mjs",
-    "seed:likes:past": "node scripts/seed-random-likes-past-posts.mjs"
+    "seed:likes:past": "node scripts/seed-random-likes-past-posts.mjs",
+    "import:product-leaders": "node scripts/import-product-leaders.mjs"
   },
   "dependencies": {
     "@fontsource/source-sans-3": "^5.2.9",

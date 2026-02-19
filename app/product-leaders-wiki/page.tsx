@@ -1,51 +1,79 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-
-import { getAllPosts } from "@/lib/content";
-import { formatDate } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Wiki para Product Leaders",
-  description: "Base práctica para líderes de producto: estrategia, decisiones, AI PM y ejecución.",
+  description: "Top 50 Product Leaders: nombre, apellido, imagen, descripción y perfil.",
   alternates: {
     canonical: "/product-leaders-wiki"
   }
 };
 
-const leaderTags = new Set([
-  "product-strategy",
-  "decision-making",
-  "go-to-market",
-  "growth",
-  "ai-pm",
-  "pricing",
-  "roadmap"
-]);
+export const revalidate = 3600;
 
-export default function ProductLeadersWikiPage() {
-  const posts = getAllPosts().filter((post) => post.tags.some((tag) => leaderTags.has(tag))).slice(0, 24);
+type ProductLeader = {
+  rank: number;
+  first_name: string;
+  last_name: string;
+  image_url: string;
+  description: string;
+  profile_url: string;
+};
+
+async function getLeaders(): Promise<ProductLeader[]> {
+  const apiBase =
+    process.env.PRODUCT_LEADERS_API_BASE_URL ??
+    process.env.NEXT_PUBLIC_PRODUCT_LEADERS_API_BASE_URL ??
+    "https://api.productdigest.es";
+
+  try {
+    const response = await fetch(`${apiBase}/api/product-leaders`, {
+      next: { revalidate: 3600 }
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as { leaders?: ProductLeader[] };
+    return Array.isArray(payload.leaders) ? payload.leaders : [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function ProductLeadersWikiPage() {
+  const leaders = await getLeaders();
 
   return (
-    <div className="page-wrap slim">
+    <div className="page-wrap">
       <h1>Wiki para Product Leaders</h1>
       <p className="page-intro">
-        Colección curada para líderes de producto en etapa de crecimiento: marcos de estrategia, velocidad de decisión,
-        pricing, GTM y AI PM.
+        Base de datos de líderes de producto con perfil, imagen y descripción para investigación rápida.
       </p>
 
-      <div className="archive-list">
-        {posts.map((post) => (
-          <article key={post.slug} className="archive-month">
-            <h2>
-              <Link href={`/post/${post.slug}`}>{post.title}</Link>
-            </h2>
-            <p>{post.summary}</p>
-            <p>
-              <small>{formatDate(post.date)}</small>
-            </p>
-          </article>
-        ))}
-      </div>
+      {leaders.length === 0 ? (
+        <p className="summary">Aún no hay datos cargados. Ejecuta el importador para poblar esta sección.</p>
+      ) : (
+        <section className="leaders-grid" aria-label="Top Product Leaders">
+          {leaders.map((leader) => (
+            <article key={`${leader.rank}-${leader.profile_url}`} className="leader-card">
+              <img src={leader.image_url} alt={`${leader.first_name} ${leader.last_name}`.trim()} loading="lazy" />
+              <div>
+                <p className="meta-row">#{leader.rank}</p>
+                <h2>
+                  {leader.first_name} {leader.last_name}
+                </h2>
+                <p className="summary">{leader.description}</p>
+                <p>
+                  <a href={leader.profile_url} target="_blank" rel="noopener noreferrer">
+                    Ver perfil
+                  </a>
+                </p>
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
     </div>
   );
 }

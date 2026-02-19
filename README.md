@@ -144,7 +144,14 @@ Server endpoints:
 - `POST /api/subscribers`
 - `GET /api/likes?slug=<post-slug>`
 - `POST /api/likes` with body `{ "slug": "<post-slug>" }`
+- `GET /api/product-leaders`
 - `GET /healthz`
+
+Import Top 50 product leaders from source URL into PostgreSQL:
+
+```bash
+DATABASE_URL="postgresql://..." npm run import:product-leaders
+```
 
 ### Connect frontend (Cloudflare)
 
@@ -152,4 +159,10 @@ The frontend currently posts directly to:
 
 ```bash
 https://api.productdigest.es/api/subscribers
+```
+
+For Product Leaders wiki data:
+
+```bash
+NEXT_PUBLIC_PRODUCT_LEADERS_API_BASE_URL=https://api.productdigest.es
 ```
