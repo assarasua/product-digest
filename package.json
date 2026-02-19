@@ -29,7 +29,8 @@
     "backend:start": "node backend/subscribe-server.mjs",
     "new:post": "node scripts/new-post.mjs",
     "publish:next-draft": "node scripts/publish-next-draft.mjs",
-    "publish:next-draft:push": "node scripts/publish-next-draft-push.mjs"
+    "publish:next-draft:push": "node scripts/publish-next-draft-push.mjs",
+    "check:api": "node scripts/check-api.mjs"
   },
   "dependencies": {
     "@fontsource/source-sans-3": "^5.2.9",
