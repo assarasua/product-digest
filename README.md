@@ -33,7 +33,7 @@ npm run publish:next-draft:push
 Example cron (daily at 07:00 CET):
 
 ```bash
-0 7 * * * cd /Users/axi/Documents/product-digest && PUBLISH_GIT_SSH_KEY=/Users/axi/.ssh/id_ed25519_product_digest_3 /opt/homebrew/bin/node scripts/publish-next-draft-push.mjs >> /Users/axi/Documents/product-digest/logs/publish-cron.log 2>&1
+0 7 * * * cd /Users/axi/Documents/product-digest && PUBLISH_GIT_SSH_KEY=/Users/axi/.ssh/id_ed25519_product_digest_4 /opt/homebrew/bin/node scripts/publish-next-draft-push.mjs >> /Users/axi/Documents/product-digest/logs/publish-cron.log 2>&1
 ```
 
 ## Build outputs
