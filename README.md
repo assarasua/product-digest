@@ -147,12 +147,6 @@ Server endpoints:
 - `GET /api/product-leaders`
 - `GET /healthz`
 
-Import Top 50 product leaders from source URL into PostgreSQL:
-
-```bash
-DATABASE_URL="postgresql://..." npm run import:product-leaders
-```
-
 ### Connect frontend (Cloudflare)
 
 The frontend currently posts directly to:
