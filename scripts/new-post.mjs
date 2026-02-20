@@ -33,7 +33,8 @@ summary: "Write a concise one-sentence takeaway."
 tags:
   - product-management
   - notes
-draft: false
+status: "scheduled"
+publishAt: "${date}T08:00:00+01:00"
 ---
 
 ## Context

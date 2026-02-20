@@ -43,7 +43,11 @@ const docs = fs
     const source = fs.readFileSync(path.join(postsDir, fileName), "utf8");
     const { data, content } = matter(source);
 
-    if (data.draft === true) {
+    const effectiveStatus =
+      String(data.status || "").toLowerCase() === "scheduled" || data.draft === true
+        ? "scheduled"
+        : "published";
+    if (effectiveStatus !== "published") {
       return null;
     }
 

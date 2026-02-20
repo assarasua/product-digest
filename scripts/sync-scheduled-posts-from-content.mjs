@@ -36,7 +36,7 @@ async function run() {
   });
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS scheduled_posts (
+    CREATE TABLE IF NOT EXISTS posts (
       id BIGSERIAL PRIMARY KEY,
       slug TEXT NOT NULL UNIQUE,
       markdown_path TEXT NOT NULL,
@@ -46,17 +46,19 @@ async function run() {
       tags TEXT[] DEFAULT '{}',
       scheduled_at TIMESTAMPTZ NOT NULL,
       timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
-      status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('draft', 'scheduled', 'published')),
+      status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'published')),
       published_at TIMESTAMPTZ NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
 
-  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS title TEXT`);
-  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS summary TEXT`);
-  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS content_md TEXT`);
-  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS title TEXT`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS summary TEXT`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS content_md TEXT`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Madrid'`);
 
   const files = fs.readdirSync(postsDir).filter((name) => name.endsWith(".mdx") || name.endsWith(".md"));
   let synced = 0;
@@ -64,7 +66,9 @@ async function run() {
   for (const fileName of files) {
     const fullPath = path.join(postsDir, fileName);
     const parsed = matter(fs.readFileSync(fullPath, "utf8"));
-    if (parsed.data.draft !== true) continue;
+    const status = String(parsed.data.status || "").toLowerCase();
+    const isScheduled = status === "scheduled" || parsed.data.draft === true;
+    if (!isScheduled) continue;
 
     const slug = extractSlug(fileName);
     const markdownPath = path.relative(rootDir, fullPath).replaceAll("\\", "/");
@@ -80,7 +84,7 @@ async function run() {
     const tags = Array.isArray(parsed.data.tags) ? parsed.data.tags.map((tag) => String(tag).toLowerCase()) : [];
 
     await pool.query(
-      `INSERT INTO scheduled_posts (slug, markdown_path, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
+      `INSERT INTO posts (slug, markdown_path, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6::text[], $7::timestamptz, $8, 'scheduled', NOW())
        ON CONFLICT (slug)
        DO UPDATE SET
@@ -92,7 +96,7 @@ async function run() {
          scheduled_at = EXCLUDED.scheduled_at,
          timezone = EXCLUDED.timezone,
          status = CASE
-           WHEN scheduled_posts.status = 'published' THEN scheduled_posts.status
+           WHEN posts.status = 'published' THEN posts.status
            ELSE 'scheduled'
          END,
          updated_at = NOW()`,
@@ -103,7 +107,7 @@ async function run() {
   }
 
   await pool.end();
-  console.log(`Synced ${synced} draft post(s) into scheduled_posts.`);
+  console.log(`Synced ${synced} scheduled post(s) into posts.`);
 }
 
 try {

@@ -17,7 +17,7 @@ function toDateString(value) {
   return String(value);
 }
 
-function findNextDraft() {
+function findNextScheduled() {
   if (!fs.existsSync(postsDir)) {
     return null;
   }
@@ -36,7 +36,7 @@ function findNextDraft() {
         date: toDateString(parsed.data.date)
       };
     })
-    .filter((item) => item.parsed.data.draft === true)
+    .filter((item) => String(item.parsed.data.status || "").toLowerCase() === "scheduled")
     .sort((a, b) => {
       const byDate = a.date.localeCompare(b.date);
       return byDate !== 0 ? byDate : a.fileName.localeCompare(b.fileName);
@@ -46,14 +46,15 @@ function findNextDraft() {
 }
 
 async function publishNextDraft() {
-  const next = findNextDraft();
+  const next = findNextScheduled();
 
   if (!next) {
-    console.log("No hay articulos en draft para publicar.");
+    console.log("No hay articulos programados para publicar.");
     return;
   }
 
-  next.parsed.data.draft = false;
+  next.parsed.data.status = "published";
+  delete next.parsed.data.draft;
   const output = matter.stringify(next.parsed.content, next.parsed.data);
   fs.writeFileSync(next.fullPath, output);
 

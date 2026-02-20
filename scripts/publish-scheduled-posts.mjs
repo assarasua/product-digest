@@ -41,7 +41,8 @@ function updateMarkdown(filePath, scheduledAtIso, slug) {
   const parsed = matter(source);
   const date = toDateString(scheduledAtIso);
 
-  parsed.data.draft = false;
+  parsed.data.status = "published";
+  delete parsed.data.draft;
   parsed.data.date = date;
   parsed.data.publishAt = new Date(scheduledAtIso).toISOString();
   parsed.data.updatedAt = date;
@@ -80,7 +81,7 @@ async function run() {
       summary TEXT NOT NULL,
       content_md TEXT NOT NULL,
       tags TEXT[] NOT NULL DEFAULT '{}',
-      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'published')),
+      status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'published')),
       scheduled_at TIMESTAMPTZ NULL,
       published_at TIMESTAMPTZ NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -89,31 +90,20 @@ async function run() {
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS scheduled_posts (
-      id BIGSERIAL PRIMARY KEY,
-      slug TEXT NOT NULL UNIQUE,
-      markdown_path TEXT NOT NULL,
-      title TEXT,
-      summary TEXT,
-      content_md TEXT,
-      tags TEXT[] DEFAULT '{}',
-      scheduled_at TIMESTAMPTZ NOT NULL,
-      timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
-      status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('draft', 'scheduled', 'published')),
-      published_at TIMESTAMPTZ NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    CREATE TABLE IF NOT EXISTS posts (
+      id BIGSERIAL PRIMARY KEY
     )
   `);
-
-  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS title TEXT`);
-  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS summary TEXT`);
-  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS content_md TEXT`);
-  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Madrid'`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS title TEXT`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS summary TEXT`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS content_md TEXT`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`);
 
   const dueScheduled = await pool.query(
     `SELECT id, slug, markdown_path, title, summary, content_md, tags, scheduled_at
-     FROM scheduled_posts
+     FROM posts
      WHERE status = 'scheduled' AND scheduled_at <= NOW()
      ORDER BY scheduled_at ASC`
   );
@@ -156,10 +146,10 @@ async function run() {
 
     if (updateMdx) {
       if (filePath && fs.existsSync(filePath)) {
-        const updatedPath = updateMarkdown(filePath, scheduledAt, slug);
-        const markdownPath = relativeToRoot(updatedPath);
-        await pool.query(
-          `UPDATE scheduled_posts
+      const updatedPath = updateMarkdown(filePath, scheduledAt, slug);
+      const markdownPath = relativeToRoot(updatedPath);
+      await pool.query(
+        `UPDATE posts
            SET markdown_path = $1,
                title = COALESCE(NULLIF($2, ''), title),
                summary = COALESCE(NULLIF($3, ''), summary),
@@ -167,8 +157,8 @@ async function run() {
                tags = CASE WHEN array_length($5::text[], 1) IS NULL THEN tags ELSE $5::text[] END,
                updated_at = NOW()
            WHERE slug = $6`,
-          [markdownPath, title, summary, contentMd, tags, slug]
-        );
+        [markdownPath, title, summary, contentMd, tags, slug]
+      );
       }
     }
 
@@ -178,23 +168,7 @@ async function run() {
     }
 
     await pool.query(
-      `INSERT INTO posts (slug, title, summary, content_md, tags, status, scheduled_at, published_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5::text[], 'published', $6::timestamptz, NOW(), NOW())
-       ON CONFLICT (slug)
-       DO UPDATE SET
-         title = EXCLUDED.title,
-         summary = EXCLUDED.summary,
-         content_md = EXCLUDED.content_md,
-         tags = EXCLUDED.tags,
-         status = 'published',
-         scheduled_at = EXCLUDED.scheduled_at,
-         published_at = COALESCE(posts.published_at, NOW()),
-         updated_at = NOW()`,
-      [slug, title, summary, contentMd, tags, scheduledAt]
-    );
-
-    await pool.query(
-      `UPDATE scheduled_posts
+      `UPDATE posts
        SET status = 'published',
            published_at = NOW(),
            title = COALESCE(NULLIF($1, ''), title),

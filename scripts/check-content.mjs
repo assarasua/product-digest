@@ -18,7 +18,9 @@ const frontmatterSchema = z.object({
   date: dateFieldSchema,
   summary: z.string().min(1),
   tags: z.array(z.string().min(1)),
-  draft: z.boolean().optional().default(false),
+  status: z.enum(["scheduled", "published"]).optional(),
+  draft: z.boolean().optional(),
+  publishAt: z.string().optional(),
   coverImage: z.string().optional(),
   updatedAt: dateFieldSchema.optional()
 });

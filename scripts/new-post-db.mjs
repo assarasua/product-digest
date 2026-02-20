@@ -55,7 +55,7 @@ const pool = new pg.Pool({
 });
 
 await pool.query(`
-  CREATE TABLE IF NOT EXISTS scheduled_posts (
+  CREATE TABLE IF NOT EXISTS posts (
     id BIGSERIAL PRIMARY KEY,
     slug TEXT NOT NULL UNIQUE,
     markdown_path TEXT NOT NULL,
@@ -63,7 +63,7 @@ await pool.query(`
     summary TEXT NOT NULL,
     content_md TEXT NOT NULL,
     tags TEXT[] DEFAULT '{}',
-    status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'published')),
+    status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'published')),
     scheduled_at TIMESTAMPTZ NULL,
     published_at TIMESTAMPTZ NULL,
     timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
@@ -73,7 +73,7 @@ await pool.query(`
 `);
 
 const result = await pool.query(
-  `INSERT INTO scheduled_posts (slug, markdown_path, title, summary, content_md, tags, status, scheduled_at, timezone, updated_at)
+  `INSERT INTO posts (slug, markdown_path, title, summary, content_md, tags, status, scheduled_at, timezone, updated_at)
    VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8::timestamptz, $9, NOW())
    ON CONFLICT (slug)
    DO UPDATE SET

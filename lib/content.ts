@@ -19,7 +19,9 @@ const frontmatterSchema = z.object({
   date: dateFieldSchema,
   summary: z.string().min(1),
   tags: z.array(z.string().min(1)),
-  draft: z.boolean().optional().default(false),
+  status: z.enum(["scheduled", "published"]).optional(),
+  draft: z.boolean().optional(),
+  publishAt: z.string().optional(),
   coverImage: z.string().optional(),
   imageDescription: z.string().optional(),
   imageLink: z.string().optional(),
@@ -126,6 +128,7 @@ function parsePostFile(fileName: string): Post {
 
   return {
     ...parsed.data,
+    status: parsed.data.status ?? (parsed.data.draft === true ? "scheduled" : "published"),
     slug: toSlug(fileName),
     body: content,
     headings: extractHeadings(content),
@@ -149,7 +152,7 @@ export function getAllPosts(): Post[] {
 
   cachedPosts = getPostFiles()
     .map(parsePostFile)
-    .filter((post) => !post.draft)
+    .filter((post) => post.status === "published")
     .sort((a, b) => b.date.localeCompare(a.date));
 
   if (process.env.CONTENT_DEBUG === "1") {
