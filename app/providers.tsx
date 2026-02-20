@@ -1,9 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { InfiniteWatchProvider } from "@infinitewatch/next";
+import { COOKIE_CONSENT_EVENT, readConsent } from "@/lib/cookie-consent";
 
 const orgId = process.env.NEXT_PUBLIC_INFINITEWATCH_ORG_ID;
 const infiniteWatchSamplingPercent = 100;
@@ -57,6 +58,19 @@ function SessionDebugLogger() {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
+
+  useEffect(() => {
+    const syncConsent = () => setAnalyticsEnabled(Boolean(readConsent()?.analytics));
+    syncConsent();
+    window.addEventListener(COOKIE_CONSENT_EVENT, syncConsent);
+    return () => window.removeEventListener(COOKIE_CONSENT_EVENT, syncConsent);
+  }, []);
+
+  if (!analyticsEnabled) {
+    return <>{children}</>;
+  }
+
   if (!orgId) {
     console.warn("[InfiniteWatch] NEXT_PUBLIC_INFINITEWATCH_ORG_ID is not configured.");
     return <>{children}</>;

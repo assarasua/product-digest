@@ -1,0 +1,96 @@
+.wrapper {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: min(920px, calc(100% - 20px));
+  z-index: 70;
+}
+
+.panel {
+  border: 1px solid #d8d1c4;
+  border-radius: 14px;
+  background: #f8f5ec;
+  color: #1f211b;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
+  padding: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.description {
+  margin: 8px 0 0;
+  line-height: 1.45;
+  color: #545040;
+  font-size: 0.94rem;
+}
+
+.categories {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.categoryLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn {
+  border: 1px solid #d8d1c4;
+  border-radius: 10px;
+  background: #fffaf0;
+  color: #1f211b;
+  font-size: 0.88rem;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.btnPrimary {
+  background: #1f7a3f;
+  border-color: #1f7a3f;
+  color: #fff;
+}
+
+.note {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #686253;
+}
+
+.manageButton {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 65;
+  border: 1px solid #d8d1c4;
+  border-radius: 999px;
+  background: #f8f5ec;
+  color: #4f4b41;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
