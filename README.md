@@ -46,14 +46,14 @@ Example cron (daily at 07:00 CET):
 
 ## Scheduled publishing with database (recommended cloud flow)
 
-The project uses a two-table production flow:
+The project uses a single production table:
 
-- `scheduled_posts`: queue of drafts planned for publication.
-- `posts`: published content consumed by the site/API.
+- `posts`: source of truth for both scheduled and published content.
+- `status`: `scheduled` or `published`.
 
-When a row in `scheduled_posts` becomes due (`scheduled_at <= NOW()`), the
-publisher upserts it into `posts` as `published` and marks the scheduled row as
-`published`. MDX updates are optional (`PUBLISH_UPDATE_MDX=1`).
+When a row in `posts` is due (`scheduled_at <= NOW()` and `status='scheduled'`),
+the publisher changes it to `published`. MDX updates are optional
+(`PUBLISH_UPDATE_MDX=1`).
 
 ### Commands
 
@@ -62,8 +62,8 @@ DATABASE_URL="postgresql://..." npm run schedule:sync
 DATABASE_URL="postgresql://..." npm run publish:scheduled
 ```
 
-- `schedule:sync`: backfills draft MDX posts into `scheduled_posts`.
-- `publish:scheduled`: moves due rows from `scheduled_posts` to `posts`.
+- `schedule:sync`: backfills scheduled MDX posts into `posts`.
+- `publish:scheduled`: publishes due rows in `posts`.
 
 ### Cloud scheduler
 
@@ -230,9 +230,9 @@ DATABASE_URL="postgresql://..." npm run new:post:db -- \
 DATABASE_URL="postgresql://..." npm run publish:scheduled
 ```
 
-`publish:scheduled` publishes from `scheduled_posts` into `posts` in PostgreSQL
-when `scheduled_at <= NOW()`. Set `PUBLISH_UPDATE_MDX=1` only if you also want
-to keep legacy MDX files synchronized.
+`publish:scheduled` publishes rows in `posts` when `scheduled_at <= NOW()`.
+Set `PUBLISH_UPDATE_MDX=1` only if you also want to keep legacy MDX files
+synchronized.
 
 ### Connect frontend (Cloudflare)
 
