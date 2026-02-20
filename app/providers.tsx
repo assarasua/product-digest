@@ -4,11 +4,12 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-import { InfiniteWatchProvider } from "@infinitewatch/next";
+import { InfiniteWatchProvider, useInfiniteWatch } from "@infinitewatch/next";
 
 const orgId = process.env.NEXT_PUBLIC_INFINITEWATCH_ORG_ID || "698ee4257fd92064f9aac24c";
 const infiniteWatchSamplingPercent = 100;
 const heartbeatIntervalMs = 30000;
+const infiniteWatchDebug = true;
 
 function SessionDebugLogger() {
   const pathname = usePathname();
@@ -84,10 +85,59 @@ function SessionDebugLogger() {
   return null;
 }
 
+function InfiniteWatchRuntimeDiagnostics() {
+  const { getSessionInfo, isBlocked, flush } = useInfiniteWatch();
+
+  useEffect(() => {
+    const prefix = "[InfiniteWatch]";
+
+    const logRuntime = (reason: string) => {
+      const session = getSessionInfo();
+      const blocked = isBlocked();
+
+      const logger = blocked ? console.warn : console.log;
+      logger(`${prefix} runtime`, {
+        reason,
+        blocked,
+        session,
+        at: new Date().toISOString()
+      });
+    };
+
+    logRuntime("mounted");
+    const initTimer = window.setTimeout(() => logRuntime("after-init"), 1500);
+    const intervalId = window.setInterval(() => logRuntime("runtime-heartbeat"), heartbeatIntervalMs);
+
+    const onVisibilityChange = () => logRuntime(`visibility:${document.visibilityState}`);
+    const onBeforeUnload = () => {
+      flush();
+      logRuntime("beforeunload");
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("beforeunload", onBeforeUnload);
+
+    return () => {
+      window.clearTimeout(initTimer);
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+  }, [flush, getSessionInfo, isBlocked]);
+
+  return null;
+}
+
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <InfiniteWatchProvider organizationId={orgId} defaultSamplingPercent={infiniteWatchSamplingPercent}>
+    <InfiniteWatchProvider
+      organizationId={orgId}
+      defaultSamplingPercent={infiniteWatchSamplingPercent}
+      sessionHeartbeatInterval={heartbeatIntervalMs}
+      debug={infiniteWatchDebug}
+    >
       <SessionDebugLogger />
+      <InfiniteWatchRuntimeDiagnostics />
       {children}
     </InfiniteWatchProvider>
   );
