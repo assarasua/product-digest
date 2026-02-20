@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { getArchiveRuntime } from "@/lib/content";
+import { getArchiveFromApi } from "@/lib/posts-api";
 import { formatDate, formatMonth } from "@/lib/format";
 import { ogImageUrl } from "@/lib/seo";
+
+export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Archivo",
@@ -27,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ArchivePage() {
-  const archive = await getArchiveRuntime();
+  const archive = await getArchiveFromApi();
 
   return (
     <div className="page-wrap slim">

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 
 import { TagPill } from "@/components/TagPill";
-import { getAllTagsRuntime } from "@/lib/content";
+import { getAllTagsFromApi } from "@/lib/posts-api";
 import { ogImageUrl } from "@/lib/seo";
+
+export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Temas",
@@ -26,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TagsPage() {
-  const tags = await getAllTagsRuntime();
+  const tags = await getAllTagsFromApi();
 
   return (
     <div className="page-wrap slim">

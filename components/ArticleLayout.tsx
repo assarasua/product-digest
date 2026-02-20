@@ -4,7 +4,7 @@ import { BackButton } from "@/components/BackButton";
 import { LikeButton } from "@/components/LikeButton";
 import { TagPill } from "@/components/TagPill";
 import { TableOfContents } from "@/components/TableOfContents";
-import type { Heading } from "@/lib/content";
+import type { Heading } from "@/lib/posts-api";
 import { formatDate } from "@/lib/format";
 
 export function ArticleLayout({

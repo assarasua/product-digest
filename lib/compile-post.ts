@@ -1,6 +1,6 @@
 import { Fragment, createElement, type ReactNode } from "react";
 
-import type { Post } from "@/lib/content";
+import type { Post } from "@/lib/posts-api";
 
 function renderInline(text: string): ReactNode[] {
   const parts: ReactNode[] = [];

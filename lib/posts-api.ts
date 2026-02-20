@@ -156,6 +156,10 @@ async function fetchPublishedPosts(): Promise<Post[]> {
     : [];
 }
 
+export async function getAllPostsFromApi(): Promise<Post[]> {
+  return fetchPublishedPosts();
+}
+
 export async function getPostBySlugFromApi(slug: string): Promise<Post | undefined> {
   const posts = await fetchPublishedPosts();
   return posts.find((post) => post.slug === slug);
@@ -164,4 +168,30 @@ export async function getPostBySlugFromApi(slug: string): Promise<Post | undefin
 export async function getPostsByTagFromApi(tag: string): Promise<Post[]> {
   const posts = await fetchPublishedPosts();
   return posts.filter((post) => post.tags.includes(tag));
+}
+
+export async function getAllTagsFromApi(): Promise<Array<{ tag: string; count: number }>> {
+  const posts = await fetchPublishedPosts();
+  const counts = new Map<string, number>();
+  for (const post of posts) {
+    for (const tag of post.tags) {
+      counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => a.tag.localeCompare(b.tag));
+}
+
+export async function getArchiveFromApi(): Promise<Array<{ month: string; posts: Post[] }>> {
+  const posts = await fetchPublishedPosts();
+  const archive = new Map<string, Post[]>();
+  for (const post of posts) {
+    const key = post.date.slice(0, 7);
+    if (!archive.has(key)) {
+      archive.set(key, []);
+    }
+    archive.get(key)?.push(post);
+  }
+  return [...archive.entries()].map(([month, groupedPosts]) => ({ month, posts: groupedPosts }));
 }

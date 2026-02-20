@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 import { PostCard } from "@/components/PostCard";
-import type { Post } from "@/lib/content";
+import type { Post } from "@/lib/posts-api";
 
 const POSTS_PER_PAGE = 5;
 

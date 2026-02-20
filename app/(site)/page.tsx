@@ -4,8 +4,11 @@ import { Suspense } from "react";
 
 import { HomeFeedPagination } from "@/components/HomeFeedPagination";
 import { PostCard } from "@/components/PostCard";
-import { getAllPostsRuntime } from "@/lib/content";
+import { getAllPostsFromApi } from "@/lib/posts-api";
 import { ogImageUrl } from "@/lib/seo";
+
+export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Inicio",
@@ -29,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const posts = await getAllPostsRuntime();
+  const posts = await getAllPostsFromApi();
 
   return (
     <div className="page-wrap">

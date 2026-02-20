@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { TagPill } from "@/components/TagPill";
-import type { Post } from "@/lib/content";
+import type { Post } from "@/lib/posts-api";
 import { formatDate } from "@/lib/format";
 
 export function PostCard({ post, index }: { post: Post; index: number }) {
