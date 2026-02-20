@@ -10,6 +10,7 @@ const orgId = process.env.NEXT_PUBLIC_INFINITEWATCH_ORG_ID || "698ee4257fd92064f
 const infiniteWatchSamplingPercent = 100;
 const heartbeatIntervalMs = 30000;
 const infiniteWatchDebug = true;
+const infiniteWatchSessionStorageKey = "iw_session_pd_force_100_v1";
 
 function SessionDebugLogger() {
   const pathname = usePathname();
@@ -134,6 +135,8 @@ export function Providers({ children }: { children: ReactNode }) {
       organizationId={orgId}
       defaultSamplingPercent={infiniteWatchSamplingPercent}
       sessionHeartbeatInterval={heartbeatIntervalMs}
+      sessionStorageKey={infiniteWatchSessionStorageKey}
+      endpointConfig=""
       debug={infiniteWatchDebug}
     >
       <SessionDebugLogger />
