@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { NavigationTracker } from "@/components/NavigationTracker";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { ogImageUrl } from "@/lib/seo";
 import { Providers } from "./providers";
@@ -89,6 +90,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="es">
       <body>
         <Providers>
+          <NavigationTracker />
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
           <div className="site-shell">
             <header className="site-header">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { buildCurrentPath, NAV_PREVIOUS_PATH_KEY } from "@/lib/navigation-history";
 
 export function BackButton() {
   const router = useRouter();
@@ -11,17 +12,23 @@ export function BackButton() {
       return;
     }
 
-    const currentUrl = window.location.href;
+    const currentPath = buildCurrentPath(window.location.pathname, window.location.search.slice(1));
+    const previousPath = window.sessionStorage.getItem(NAV_PREVIOUS_PATH_KEY);
 
-    // Prefer browser history for real back navigation.
-    if (window.history.length > 1) {
-      window.history.back();
-      window.setTimeout(() => {
-        if (window.location.href === currentUrl) {
-          router.push("/");
-        }
-      }, 250);
+    // Navigate to the last in-app route captured by NavigationTracker.
+    if (previousPath && previousPath !== currentPath) {
+      router.push(previousPath);
       return;
+    }
+
+    // Fallback to same-origin referrer for direct entries.
+    if (document.referrer.startsWith(window.location.origin)) {
+      const referrerUrl = new URL(document.referrer);
+      const referrerPath = `${referrerUrl.pathname}${referrerUrl.search}${referrerUrl.hash}`;
+      if (referrerPath && referrerPath !== currentPath) {
+        router.push(referrerPath);
+        return;
+      }
     }
 
     router.push("/");
