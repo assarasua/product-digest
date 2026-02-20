@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { notFound } from "next/navigation";
 
 import { ArticleLayout } from "@/components/ArticleLayout";
@@ -92,9 +91,10 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
   return (
     <div className="page-wrap">
-      <Script id={`schema-post-${post.slug}`} type="application/ld+json">
-        {JSON.stringify(articleSchema)}
-      </Script>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
       <ReadingProgress />
       <ArticleLayout
         title={post.title}

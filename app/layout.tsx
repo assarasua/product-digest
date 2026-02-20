@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Script from "next/script";
 import type { ReactNode } from "react";
 
 import { NewsletterSignup } from "@/components/NewsletterSignup";
@@ -92,15 +91,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <Providers>
           {plausibleDomain ? (
-            <Script
+            <script
               defer
               data-domain={plausibleDomain}
               src="https://plausible.io/js/script.outbound-links.js"
             />
           ) : null}
-          <Script id="schema-website" type="application/ld+json">
-            {JSON.stringify(websiteSchema)}
-          </Script>
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
           <div className="site-shell">
             <header className="site-header">
               <nav className="site-nav">
