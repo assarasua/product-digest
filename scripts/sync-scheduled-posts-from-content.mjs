@@ -36,6 +36,22 @@ async function run() {
   });
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS posts (
+      id BIGSERIAL PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      content_md TEXT NOT NULL,
+      tags TEXT[] NOT NULL DEFAULT '{}',
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'published')),
+      scheduled_at TIMESTAMPTZ NULL,
+      published_at TIMESTAMPTZ NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS scheduled_posts (
       id BIGSERIAL PRIMARY KEY,
       slug TEXT NOT NULL UNIQUE,
@@ -60,7 +76,42 @@ async function run() {
     const slug = extractSlug(fileName);
     const markdownPath = path.relative(rootDir, fullPath).replaceAll("\\", "/");
     const scheduledAt = parsed.data.publishAt || buildDefaultScheduledAt(parsed.data.date);
-    if (!scheduledAt || Number.isNaN(Date.parse(scheduledAt))) continue;
+    const hasValidSchedule = Boolean(scheduledAt && !Number.isNaN(Date.parse(scheduledAt)));
+    const status = hasValidSchedule ? "scheduled" : "draft";
+
+    await pool.query(
+      `INSERT INTO posts (slug, title, summary, content_md, tags, status, scheduled_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5::text[], $6, $7::timestamptz, NOW())
+       ON CONFLICT (slug)
+       DO UPDATE SET
+         title = EXCLUDED.title,
+         summary = EXCLUDED.summary,
+         content_md = EXCLUDED.content_md,
+         tags = EXCLUDED.tags,
+         status = CASE
+           WHEN posts.status = 'published' THEN posts.status
+           ELSE EXCLUDED.status
+         END,
+         scheduled_at = CASE
+           WHEN posts.status = 'published' THEN posts.scheduled_at
+           ELSE EXCLUDED.scheduled_at
+         END,
+         updated_at = NOW()`,
+      [
+        slug,
+        String(parsed.data.title || slug),
+        String(parsed.data.summary || ""),
+        String(parsed.content || ""),
+        Array.isArray(parsed.data.tags) ? parsed.data.tags.map((tag) => String(tag).toLowerCase()) : [],
+        status,
+        hasValidSchedule ? scheduledAt : null
+      ]
+    );
+
+    if (!hasValidSchedule) {
+      synced += 1;
+      continue;
+    }
 
     await pool.query(
       `INSERT INTO scheduled_posts (slug, markdown_path, scheduled_at, timezone, status, updated_at)

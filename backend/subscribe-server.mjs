@@ -64,11 +64,27 @@ await pool.query(`
   )
 `);
 
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS posts (
+    id BIGSERIAL PRIMARY KEY,
+    slug TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    content_md TEXT NOT NULL,
+    tags TEXT[] NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'published')),
+    scheduled_at TIMESTAMPTZ NULL,
+    published_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )
+`);
+
 function send(res, status, payload) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+    "Access-Control-Allow-Methods": "POST, PATCH, OPTIONS, GET",
     "Access-Control-Allow-Headers": "Content-Type"
   });
   res.end(JSON.stringify(payload));
@@ -84,6 +100,12 @@ function isValidSlug(value) {
 
 function isValidTimezone(value) {
   return /^[A-Za-z_]+\/[A-Za-z_]+(?:\/[A-Za-z_]+)?$/.test(value);
+}
+
+function parsePathParams(pathname) {
+  const clean = pathname.replace(/\/+$/, "");
+  const parts = clean.split("/").filter(Boolean);
+  return parts;
 }
 
 function readBody(req) {
@@ -103,7 +125,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+      "Access-Control-Allow-Methods": "POST, PATCH, OPTIONS, GET",
       "Access-Control-Allow-Headers": "Content-Type"
     });
     res.end();
@@ -117,6 +139,11 @@ const server = http.createServer(async (req, res) => {
       endpoints: [
         "GET /healthz",
         "POST /api/subscribers",
+        "GET /api/posts",
+        "GET /api/posts/:slug",
+        "POST /api/posts",
+        "PATCH /api/posts/:slug/schedule",
+        "POST /api/posts/:slug/publish",
         "GET /api/scheduled-posts",
         "POST /api/scheduled-posts"
       ]
@@ -156,6 +183,210 @@ const server = http.createServer(async (req, res) => {
          ORDER BY rank ASC`
       );
       send(res, 200, { leaders: result.rows });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "GET" && parsed.pathname === "/api/posts") {
+    try {
+      const status = String(parsed.searchParams.get("status") || "published").trim().toLowerCase();
+      const tag = String(parsed.searchParams.get("tag") || "").trim().toLowerCase();
+      const q = String(parsed.searchParams.get("q") || "").trim().toLowerCase();
+      const limit = Math.min(100, Math.max(1, Number(parsed.searchParams.get("limit") || 20)));
+      const offset = Math.max(0, Number(parsed.searchParams.get("offset") || 0));
+      const allowedStatus = new Set(["draft", "scheduled", "published", "all"]);
+
+      if (!allowedStatus.has(status)) {
+        send(res, 400, { error: "invalid_status" });
+        return;
+      }
+
+      const where = [];
+      const values = [];
+      let index = 1;
+
+      if (status !== "all") {
+        where.push(`status = $${index++}`);
+        values.push(status);
+      }
+      if (tag) {
+        where.push(`$${index++} = ANY(tags)`);
+        values.push(tag);
+      }
+      if (q) {
+        where.push(`(LOWER(title) LIKE $${index} OR LOWER(summary) LIKE $${index} OR LOWER(content_md) LIKE $${index})`);
+        values.push(`%${q}%`);
+        index += 1;
+      }
+
+      values.push(limit);
+      values.push(offset);
+
+      const sql = `SELECT slug, title, summary, content_md, tags, status, scheduled_at, published_at, created_at, updated_at
+                   FROM posts
+                   ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+                   ORDER BY COALESCE(published_at, scheduled_at, created_at) DESC
+                   LIMIT $${index++} OFFSET $${index}`;
+
+      const result = await pool.query(sql, values);
+      send(res, 200, { posts: result.rows });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "POST" && parsed.pathname === "/api/posts") {
+    try {
+      const body = await readBody(req);
+      const payload = JSON.parse(body || "{}");
+
+      const slug = String(payload.slug || "").trim().toLowerCase();
+      const title = String(payload.title || "").trim();
+      const summary = String(payload.summary || "").trim();
+      const contentMd = String(payload.contentMd || payload.content_md || "").trim();
+      const tags = Array.isArray(payload.tags)
+        ? payload.tags.map((item) => String(item).trim().toLowerCase()).filter(Boolean)
+        : [];
+      const status = String(payload.status || "draft").trim().toLowerCase();
+      const scheduledAt = payload.scheduledAt ? String(payload.scheduledAt).trim() : null;
+
+      if (!slug || !isValidSlug(slug)) {
+        send(res, 400, { error: "invalid_slug" });
+        return;
+      }
+      if (!title || !summary || !contentMd) {
+        send(res, 400, { error: "missing_fields" });
+        return;
+      }
+      if (!["draft", "scheduled", "published"].includes(status)) {
+        send(res, 400, { error: "invalid_status" });
+        return;
+      }
+      if (scheduledAt && Number.isNaN(Date.parse(scheduledAt))) {
+        send(res, 400, { error: "invalid_scheduled_at" });
+        return;
+      }
+
+      const result = await pool.query(
+        `INSERT INTO posts (slug, title, summary, content_md, tags, status, scheduled_at, published_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5::text[], $6, $7::timestamptz, CASE WHEN $6 = 'published' THEN NOW() ELSE NULL END, NOW())
+         ON CONFLICT (slug)
+         DO UPDATE SET
+           title = EXCLUDED.title,
+           summary = EXCLUDED.summary,
+           content_md = EXCLUDED.content_md,
+           tags = EXCLUDED.tags,
+           status = EXCLUDED.status,
+           scheduled_at = EXCLUDED.scheduled_at,
+           published_at = CASE
+             WHEN EXCLUDED.status = 'published' THEN COALESCE(posts.published_at, NOW())
+             ELSE posts.published_at
+           END,
+           updated_at = NOW()
+         RETURNING slug, status, scheduled_at, published_at`,
+        [slug, title, summary, contentMd, tags, status, scheduledAt]
+      );
+
+      send(res, 200, { ok: true, post: result.rows[0] });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  const pathParts = parsePathParams(parsed.pathname);
+  const isPostDetail = pathParts.length >= 3 && pathParts[0] === "api" && pathParts[1] === "posts";
+  const slugFromPath = isPostDetail ? decodeURIComponent(pathParts[2] || "").toLowerCase() : "";
+
+  if (req.method === "GET" && isPostDetail && pathParts.length === 3) {
+    if (!slugFromPath || !isValidSlug(slugFromPath)) {
+      send(res, 400, { error: "invalid_slug" });
+      return;
+    }
+    try {
+      const result = await pool.query(
+        `SELECT slug, title, summary, content_md, tags, status, scheduled_at, published_at, created_at, updated_at
+         FROM posts
+         WHERE slug = $1
+         LIMIT 1`,
+        [slugFromPath]
+      );
+      if (result.rowCount === 0) {
+        send(res, 404, { error: "not_found" });
+        return;
+      }
+      send(res, 200, { post: result.rows[0] });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "PATCH" && isPostDetail && pathParts.length === 4 && pathParts[3] === "schedule") {
+    try {
+      const body = await readBody(req);
+      const payload = JSON.parse(body || "{}");
+      const scheduledAt = String(payload.scheduledAt || "").trim();
+
+      if (!slugFromPath || !isValidSlug(slugFromPath)) {
+        send(res, 400, { error: "invalid_slug" });
+        return;
+      }
+      if (!scheduledAt || Number.isNaN(Date.parse(scheduledAt))) {
+        send(res, 400, { error: "invalid_scheduled_at" });
+        return;
+      }
+
+      const result = await pool.query(
+        `UPDATE posts
+         SET status = 'scheduled',
+             scheduled_at = $2::timestamptz,
+             updated_at = NOW()
+         WHERE slug = $1
+         RETURNING slug, status, scheduled_at`,
+        [slugFromPath, scheduledAt]
+      );
+
+      if (result.rowCount === 0) {
+        send(res, 404, { error: "not_found" });
+        return;
+      }
+
+      send(res, 200, { ok: true, post: result.rows[0] });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "POST" && isPostDetail && pathParts.length === 4 && pathParts[3] === "publish") {
+    try {
+      if (!slugFromPath || !isValidSlug(slugFromPath)) {
+        send(res, 400, { error: "invalid_slug" });
+        return;
+      }
+      const result = await pool.query(
+        `UPDATE posts
+         SET status = 'published',
+             published_at = COALESCE(published_at, NOW()),
+             updated_at = NOW()
+         WHERE slug = $1
+         RETURNING slug, status, published_at`,
+        [slugFromPath]
+      );
+      if (result.rowCount === 0) {
+        send(res, 404, { error: "not_found" });
+        return;
+      }
+      send(res, 200, { ok: true, post: result.rows[0] });
       return;
     } catch {
       send(res, 500, { error: "db_error" });

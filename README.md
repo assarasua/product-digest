@@ -177,6 +177,18 @@ DATABASE_URL="postgresql://..." npm run backend:start
 ```
 
 Server endpoints:
+- `GET /api/posts?status=published|scheduled|draft|all&tag=<tag>&q=<query>&limit=20&offset=0`
+- `GET /api/posts/:slug`
+- `POST /api/posts` with body:
+  - `slug`
+  - `title`
+  - `summary`
+  - `contentMd`
+  - `tags` (`string[]`)
+  - `status` (`draft|scheduled|published`)
+  - `scheduledAt` (optional ISO)
+- `PATCH /api/posts/:slug/schedule` with body `{ "scheduledAt": "<ISO>" }`
+- `POST /api/posts/:slug/publish`
 - `POST /api/subscribe`
 - `POST /api/subscribers`
 - `GET /api/likes?slug=<post-slug>`
@@ -190,6 +202,32 @@ Server endpoints:
   - `timezone` (optional, default `Europe/Madrid`)
   - `status` (`draft|scheduled|published`, optional)
 - `GET /healthz`
+
+### DB-first publishing flow (production)
+
+Use PostgreSQL as source of truth:
+
+1. Create/update a post directly in DB:
+
+```bash
+DATABASE_URL="postgresql://..." npm run new:post:db -- \
+  --slug "mi-post" \
+  --title "Mi post" \
+  --summary "Resumen breve" \
+  --scheduledAt "2026-02-21T08:00:00+01:00" \
+  --tags "producto,ai" \
+  --content "Contenido en markdown"
+```
+
+2. Auto-publish due posts (cron/CI):
+
+```bash
+DATABASE_URL="postgresql://..." npm run publish:scheduled
+```
+
+`publish:scheduled` now marks posts as `published` in PostgreSQL when
+`scheduled_at <= NOW()`. Set `PUBLISH_UPDATE_MDX=1` only if you also want to
+keep legacy MDX files synchronized.
 
 ### Connect frontend (Cloudflare)
 

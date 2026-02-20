@@ -15,6 +15,7 @@ const rootDir = process.cwd();
 const postsDir = path.join(rootDir, "content/posts");
 const searchIndexScript = path.join(rootDir, "scripts/generate-search-index.mjs");
 const skipSearchIndex = process.env.PUBLISH_SKIP_SEARCH_INDEX === "1";
+const updateMdx = process.env.PUBLISH_UPDATE_MDX === "1";
 
 function toDateString(isoDateTime) {
   return new Date(isoDateTime).toISOString().slice(0, 10);
@@ -72,6 +73,22 @@ async function run() {
   });
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS posts (
+      id BIGSERIAL PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      content_md TEXT NOT NULL,
+      tags TEXT[] NOT NULL DEFAULT '{}',
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'published')),
+      scheduled_at TIMESTAMPTZ NULL,
+      published_at TIMESTAMPTZ NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS scheduled_posts (
       id BIGSERIAL PRIMARY KEY,
       slug TEXT NOT NULL UNIQUE,
@@ -85,53 +102,72 @@ async function run() {
     )
   `);
 
-  const due = await pool.query(
-    `SELECT id, slug, markdown_path, scheduled_at
-     FROM scheduled_posts
-     WHERE status = 'scheduled' AND scheduled_at <= NOW()
-     ORDER BY scheduled_at ASC`
+  const dueFromPosts = await pool.query(
+    `UPDATE posts
+     SET status = 'published',
+         published_at = COALESCE(published_at, NOW()),
+         updated_at = NOW()
+     WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= NOW()
+     RETURNING slug, scheduled_at`
   );
 
-  if (due.rowCount === 0) {
+  if (dueFromPosts.rowCount === 0) {
     console.log("No scheduled posts are due.");
     await pool.end();
     return;
   }
 
+  const publishedBySlug = new Map(
+    dueFromPosts.rows.map((row) => [String(row.slug), new Date(row.scheduled_at).toISOString()])
+  );
+
+  await pool.query(
+    `UPDATE scheduled_posts
+     SET status = 'published',
+         published_at = NOW(),
+         updated_at = NOW()
+     WHERE slug = ANY($1::text[]) AND status = 'scheduled'`,
+    [Array.from(publishedBySlug.keys())]
+  );
+
   let publishedCount = 0;
+  for (const [slug, scheduledAt] of publishedBySlug.entries()) {
+    if (updateMdx) {
+      let filePath = resolveMarkdownPath(
+        String(
+          (
+            await pool.query(`SELECT markdown_path FROM scheduled_posts WHERE slug = $1 LIMIT 1`, [slug])
+          ).rows[0]?.markdown_path || ""
+        )
+      );
 
-  for (const row of due.rows) {
-    const slug = String(row.slug);
-    const scheduledAt = new Date(row.scheduled_at).toISOString();
-    let filePath = resolveMarkdownPath(String(row.markdown_path || ""));
-
-    if (!filePath || !fs.existsSync(filePath)) {
-      const fallbackName = findMarkdownBySlug(slug);
-      if (!fallbackName) {
-        console.warn(`Skipping ${slug}: markdown file not found.`);
-        continue;
+      if (!filePath || !fs.existsSync(filePath)) {
+        const fallbackName = findMarkdownBySlug(slug);
+        if (!fallbackName) {
+          console.warn(`Skipping MDX sync for ${slug}: markdown file not found.`);
+          publishedCount += 1;
+          continue;
+        }
+        filePath = path.join(postsDir, fallbackName);
       }
-      filePath = path.join(postsDir, fallbackName);
+
+      const updatedPath = updateMarkdown(filePath, scheduledAt, slug);
+      const markdownPath = relativeToRoot(updatedPath);
+      await pool.query(
+        `UPDATE scheduled_posts
+         SET markdown_path = $1,
+             updated_at = NOW()
+         WHERE slug = $2`,
+        [markdownPath, slug]
+      );
+      console.log(`Published scheduled post: ${slug} (${markdownPath})`);
+    } else {
+      console.log(`Published scheduled post in DB: ${slug}`);
     }
-
-    const updatedPath = updateMarkdown(filePath, scheduledAt, slug);
-    const markdownPath = relativeToRoot(updatedPath);
-
-    await pool.query(
-      `UPDATE scheduled_posts
-       SET markdown_path = $1,
-           status = 'published',
-           published_at = NOW(),
-           updated_at = NOW()
-       WHERE id = $2`,
-      [markdownPath, row.id]
-    );
-
     publishedCount += 1;
-    console.log(`Published scheduled post: ${slug} (${markdownPath})`);
   }
 
-  if (publishedCount > 0 && !skipSearchIndex && fs.existsSync(searchIndexScript)) {
+  if (publishedCount > 0 && updateMdx && !skipSearchIndex && fs.existsSync(searchIndexScript)) {
     spawnSync(process.execPath, [searchIndexScript], { stdio: "inherit" });
   }
 
