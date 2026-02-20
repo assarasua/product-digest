@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { getArchive } from "@/lib/content";
+import { getArchiveRuntime } from "@/lib/content";
 import { formatDate, formatMonth } from "@/lib/format";
 import { ogImageUrl } from "@/lib/seo";
 
@@ -26,8 +26,8 @@ export const metadata: Metadata = {
   }
 };
 
-export default function ArchivePage() {
-  const archive = getArchive();
+export default async function ArchivePage() {
+  const archive = await getArchiveRuntime();
 
   return (
     <div className="page-wrap slim">

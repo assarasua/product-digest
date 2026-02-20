@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 
 import { PostCard } from "@/components/PostCard";
-import { getAllTags, getPostsByTag } from "@/lib/content";
+import { getAllTagsRuntime, getPostsByTagRuntime } from "@/lib/content";
 import { ogImageUrl } from "@/lib/seo";
 
-export function generateStaticParams() {
-  return getAllTags().map(({ tag }) => ({ tag }));
+export async function generateStaticParams() {
+  const tags = await getAllTagsRuntime();
+  return tags.map(({ tag }) => ({ tag }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ tag: string }> }): Promise<Metadata> {
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ tag: stri
 
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
   const { tag } = await params;
-  const posts = getPostsByTag(tag);
+  const posts = await getPostsByTagRuntime(tag);
 
   return (
     <div className="page-wrap">

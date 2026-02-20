@@ -11,10 +11,38 @@ export function SearchClient() {
   const [docs, setDocs] = useState<SearchDocument[]>([]);
 
   useEffect(() => {
-    fetch("/search-index.json")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: SearchDocument[]) => setDocs(data))
-      .catch(() => setDocs([]));
+    const apiBase =
+      process.env.NEXT_PUBLIC_POSTS_API_BASE_URL?.replace(/\/+$/, "") ?? "https://api.productdigest.es";
+    fetch(`${apiBase}/api/posts?status=published&limit=1000`)
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error("posts_api_error");
+        }
+        return (await res.json()) as { posts?: Array<Record<string, unknown>> };
+      })
+      .then((payload) => {
+        const mapped: SearchDocument[] = Array.isArray(payload.posts)
+          ? payload.posts.map((post) => {
+              const rawDate = String(post.published_at ?? post.scheduled_at ?? post.updated_at ?? "");
+              const date = rawDate ? new Date(rawDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+              const tags = Array.isArray(post.tags) ? post.tags.map((tag) => String(tag)) : [];
+              const body = String(post.content_md ?? "");
+              const summary = String(post.summary ?? "");
+              return {
+                slug: String(post.slug ?? ""),
+                title: String(post.title ?? ""),
+                summary,
+                tags,
+                text: `${summary} ${body}`.trim(),
+                date
+              };
+            })
+          : [];
+        setDocs(mapped.filter((doc) => doc.slug && doc.title));
+      })
+      .catch(() => {
+        setDocs([]);
+      });
   }, []);
 
   const results = useMemo(() => {

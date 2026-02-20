@@ -5,16 +5,17 @@ import { notFound } from "next/navigation";
 import { ArticleLayout } from "@/components/ArticleLayout";
 import { ReadingProgress } from "@/components/ReadingProgress";
 import { compilePost } from "@/lib/compile-post";
-import { getAllPostSlugs, getPostBySlug } from "@/lib/content";
+import { getAllPostsRuntime, getPostBySlugRuntime } from "@/lib/content";
 import { absoluteUrl, getSiteUrl, ogImageUrl } from "@/lib/seo";
 
-export function generateStaticParams() {
-  return getAllPostSlugs().map((slug) => ({ slug }));
+export async function generateStaticParams() {
+  const posts = await getAllPostsRuntime();
+  return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlugRuntime(slug);
 
   if (!post) {
     return {
@@ -60,7 +61,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlugRuntime(slug);
 
   if (!post) {
     notFound();

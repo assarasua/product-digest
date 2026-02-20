@@ -1,4 +1,4 @@
-import { getAllPosts } from "@/lib/content";
+import { getAllPostsRuntime } from "@/lib/content";
 
 export const dynamic = "force-static";
 
@@ -105,7 +105,7 @@ function renderMdxToHtml(input: string) {
 }
 
 export async function GET() {
-  const posts = getAllPosts();
+  const posts = await getAllPostsRuntime();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://productdigest.es";
   const feedUrl = `${siteUrl}/rss.xml`;
   const lastBuildDate = posts[0] ? new Date(posts[0].updatedAt ?? posts[0].date).toUTCString() : new Date().toUTCString();

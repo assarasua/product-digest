@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { TagPill } from "@/components/TagPill";
-import { getAllTags } from "@/lib/content";
+import { getAllTagsRuntime } from "@/lib/content";
 import { ogImageUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   }
 };
 
-export default function TagsPage() {
-  const tags = getAllTags();
+export default async function TagsPage() {
+  const tags = await getAllTagsRuntime();
 
   return (
     <div className="page-wrap slim">

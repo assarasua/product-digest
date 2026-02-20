@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { HomeFeedPagination } from "@/components/HomeFeedPagination";
 import { PostCard } from "@/components/PostCard";
-import { getAllPosts } from "@/lib/content";
+import { getAllPostsRuntime } from "@/lib/content";
 import { ogImageUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -28,8 +28,8 @@ export const metadata: Metadata = {
   }
 };
 
-export default function HomePage() {
-  const posts = getAllPosts();
+export default async function HomePage() {
+  const posts = await getAllPostsRuntime();
 
   return (
     <div className="page-wrap">

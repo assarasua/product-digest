@@ -8,6 +8,7 @@ import { z } from "zod";
 const postsDir = path.join(process.cwd(), "content/posts");
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
 let cachedPosts: Post[] | null = null;
+let cachedRemotePosts: Post[] | null = null;
 
 const dateFieldSchema = z
   .union([z.string(), z.date()])
@@ -111,6 +112,95 @@ function buildPreviewText(summary: string, body: string): string {
   return `${sliced.slice(0, end > 80 ? end : maxChars).trim()}...`;
 }
 
+function normalizeDate(value: unknown): string {
+  if (typeof value !== "string" || !value) {
+    return new Date().toISOString().slice(0, 10);
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value.slice(0, 10);
+  }
+  return parsed.toISOString().slice(0, 10);
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map((item) => String(item).trim().toLowerCase()).filter(Boolean);
+}
+
+function postFromRaw(raw: {
+  slug: string;
+  title: string;
+  summary: string;
+  tags?: unknown;
+  content_md?: string;
+  contentMd?: string;
+  status?: string;
+  published_at?: string;
+  scheduled_at?: string;
+  updated_at?: string;
+  updatedAt?: string;
+  date?: string;
+}): Post {
+  const body = String(raw.content_md ?? raw.contentMd ?? "").trim();
+  const date = normalizeDate(raw.published_at ?? raw.scheduled_at ?? raw.date ?? new Date().toISOString());
+  const updatedAt = normalizeDate(raw.updated_at ?? raw.updatedAt ?? date);
+  const tags = normalizeStringArray(raw.tags);
+  const stats = readingTime(body);
+
+  return {
+    title: String(raw.title || raw.slug),
+    date,
+    summary: String(raw.summary || ""),
+    tags,
+    status: raw.status === "scheduled" ? "scheduled" : "published",
+    updatedAt,
+    slug: String(raw.slug || ""),
+    body,
+    headings: extractHeadings(body),
+    previewText: buildPreviewText(String(raw.summary || ""), body),
+    readingTimeMinutes: Math.max(1, Math.round(stats.minutes))
+  };
+}
+
+function getPostsApiBaseUrl(): string {
+  return (
+    process.env.POSTS_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL ||
+    "https://api.productdigest.es"
+  ).replace(/\/+$/, "");
+}
+
+export async function getRemotePublishedPosts(): Promise<Post[]> {
+  if (cachedRemotePosts) {
+    return cachedRemotePosts;
+  }
+
+  const apiBase = getPostsApiBaseUrl();
+  const url = `${apiBase}/api/posts?status=published&limit=1000`;
+
+  const response = await fetch(url, {
+    next: { revalidate: 60 }
+  });
+
+  if (!response.ok) {
+    throw new Error(`remote_posts_failed_${response.status}`);
+  }
+
+  const payload = (await response.json()) as { posts?: unknown[] };
+  const posts = Array.isArray(payload.posts)
+    ? payload.posts
+        .map((post) => postFromRaw(post as Parameters<typeof postFromRaw>[0]))
+        .filter((post) => post.slug && post.status === "published")
+        .sort((a, b) => b.date.localeCompare(a.date))
+    : [];
+
+  cachedRemotePosts = posts;
+  return posts;
+}
+
 function parsePostFile(fileName: string): Post {
   const fullPath = path.join(postsDir, fileName);
   const raw = fs.readFileSync(fullPath, "utf8");
@@ -162,12 +252,26 @@ export function getAllPosts(): Post[] {
   return cachedPosts;
 }
 
+export async function getAllPostsRuntime(): Promise<Post[]> {
+  try {
+    return await getRemotePublishedPosts();
+  } catch (error) {
+    console.error("[content] failed to load published posts from API", error);
+    return [];
+  }
+}
+
 export function getAllPostSlugs(): string[] {
   return getAllPosts().map((post) => post.slug);
 }
 
 export function getPostBySlug(slug: string): Post | undefined {
   return getAllPosts().find((post) => post.slug === slug);
+}
+
+export async function getPostBySlugRuntime(slug: string): Promise<Post | undefined> {
+  const posts = await getAllPostsRuntime();
+  return posts.find((post) => post.slug === slug);
 }
 
 export function getAllTags() {
@@ -184,8 +288,27 @@ export function getAllTags() {
     .sort((a, b) => a.tag.localeCompare(b.tag));
 }
 
+export async function getAllTagsRuntime() {
+  const counts = new Map<string, number>();
+
+  for (const post of await getAllPostsRuntime()) {
+    for (const tag of post.tags) {
+      counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => a.tag.localeCompare(b.tag));
+}
+
 export function getPostsByTag(tag: string): Post[] {
   return getAllPosts().filter((post) => post.tags.includes(tag));
+}
+
+export async function getPostsByTagRuntime(tag: string): Promise<Post[]> {
+  const posts = await getAllPostsRuntime();
+  return posts.filter((post) => post.tags.includes(tag));
 }
 
 export function getArchive() {
@@ -199,5 +322,17 @@ export function getArchive() {
     archive.get(key)?.push(post);
   }
 
+  return [...archive.entries()].map(([month, posts]) => ({ month, posts }));
+}
+
+export async function getArchiveRuntime() {
+  const archive = new Map<string, Post[]>();
+  for (const post of await getAllPostsRuntime()) {
+    const key = post.date.slice(0, 7);
+    if (!archive.has(key)) {
+      archive.set(key, []);
+    }
+    archive.get(key)?.push(post);
+  }
   return [...archive.entries()].map(([month, posts]) => ({ month, posts }));
 }
