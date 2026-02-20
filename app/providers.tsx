@@ -7,7 +7,6 @@ import { InfiniteWatchProvider } from "@infinitewatch/next";
 
 const orgId = process.env.NEXT_PUBLIC_INFINITEWATCH_ORG_ID || "698ee4257fd92064f9aac24c";
 const infiniteWatchSamplingPercent = 100;
-const heartbeatIntervalMs = 30000;
 
 function SessionDebugLogger() {
   useEffect(() => {
@@ -35,19 +34,16 @@ function SessionDebugLogger() {
       });
     };
 
-    const logHeartbeat = () => {
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("beforeunload", onBeforeUnload);
+
+    const heartbeatId = window.setInterval(() => {
       console.log(`${prefix} heartbeat`, {
         path: window.location.pathname,
         visible: document.visibilityState === "visible",
         at: new Date().toISOString()
       });
-    };
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("beforeunload", onBeforeUnload);
-
-    logHeartbeat();
-    const heartbeatId = window.setInterval(logHeartbeat, heartbeatIntervalMs);
+    }, 30000);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
