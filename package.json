@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "npm run build:local",
     "build:local": "npm run check:runtime && npm run prebuild && next build --no-lint",
-    "build:ci": "DOCTOR_STRICT=1 npm run doctor && npm run prebuild && next build",
+    "build:ci": "npm run clean:next && DOCTOR_STRICT=1 npm run doctor && npm run prebuild && next build",
     "build:debug": "mkdir -p logs && npm run check:runtime && npm run prebuild && NEXT_TELEMETRY_DISABLED=1 next build --debug 2>&1 | tee logs/build-debug.log",
     "start": "next start",
     "lint": "next lint",
