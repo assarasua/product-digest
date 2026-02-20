@@ -653,6 +653,86 @@ h3 {
   transition: width 120ms linear;
 }
 
+.cookie-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  width: min(860px, calc(100% - 1.2rem));
+  background: color-mix(in srgb, var(--paper), white 28%);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+  padding: 1rem 1.05rem;
+  z-index: 60;
+}
+
+.cookie-banner h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.cookie-banner p {
+  margin: 0.45rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.cookie-category {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.cookie-category label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.cookie-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+}
+
+.cookie-btn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.cookie-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.cookie-note {
+  margin-top: 0.65rem;
+  font-size: 0.85rem;
+}
+
+.cookie-manage-button {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--paper), white 20%);
+  color: var(--ink-soft);
+  padding: 0.46rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  z-index: 45;
+}
+
 @keyframes card-rise {
   from {
     opacity: 0;
@@ -728,5 +808,9 @@ h3 {
   .newsletter-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .cookie-actions {
+    flex-direction: column;
   }
 }
