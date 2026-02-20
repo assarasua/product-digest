@@ -7,12 +7,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getAllPostsFromApi();
   const tags = await getAllTagsFromApi();
 
-  const staticPages = ["", "/product-leaders-wiki", "/tags", "/archive", "/search", "/about", "/privacy"].map(
-    (path) => ({
-      url: `${siteUrl}${path}`,
-      lastModified: new Date()
-    })
-  );
+  const staticPages = ["", "/product-leaders-wiki", "/tags", "/archive", "/search", "/about"].map((path) => ({
+    url: `${siteUrl}${path}`,
+    lastModified: new Date()
+  }));
 
   const postPages = posts.map((post) => ({
     url: `${siteUrl}/post/${post.slug}`,
