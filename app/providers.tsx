@@ -5,7 +5,7 @@ import { useEffect } from "react";
 
 import { InfiniteWatchProvider } from "@infinitewatch/next";
 
-const orgId = process.env.NEXT_PUBLIC_INFINITEWATCH_ORG_ID;
+const orgId = process.env.NEXT_PUBLIC_INFINITEWATCH_ORG_ID || "698ee4257fd92064f9aac24c";
 const infiniteWatchSamplingPercent = 100;
 
 function SessionDebugLogger() {
@@ -57,11 +57,6 @@ function SessionDebugLogger() {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
-  if (!orgId) {
-    console.warn("[InfiniteWatch] NEXT_PUBLIC_INFINITEWATCH_ORG_ID is not configured.");
-    return <>{children}</>;
-  }
-
   return (
     <InfiniteWatchProvider organizationId={orgId} defaultSamplingPercent={infiniteWatchSamplingPercent}>
       <SessionDebugLogger />
