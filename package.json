@@ -6,6 +6,7 @@
     "node": ">=22 <23"
   },
   "scripts": {
+    "postinstall": "node scripts/patch-next-bfcache.mjs",
     "dev": "next dev",
     "build": "npm run build:local",
     "build:local": "npm run check:runtime && npm run prebuild && next build --no-lint",
