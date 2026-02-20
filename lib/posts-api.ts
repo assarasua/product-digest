@@ -1,5 +1,3 @@
-import readingTime from "reading-time";
-
 export type Heading = {
   id: string;
   level: 2 | 3;
@@ -125,7 +123,8 @@ function postFromRaw(raw: {
   const date = normalizeDate(raw.published_at ?? raw.scheduled_at ?? new Date().toISOString());
   const updatedAt = normalizeDate(raw.updated_at ?? date);
   const tags = normalizeStringArray(raw.tags);
-  const stats = readingTime(body);
+  const words = stripMdx(body).split(/\s+/).filter(Boolean).length;
+  const readingTimeMinutes = Math.max(1, Math.round(words / 220));
 
   return {
     title: String(raw.title || raw.slug),
@@ -138,7 +137,7 @@ function postFromRaw(raw: {
     body,
     headings: extractHeadings(body),
     previewText: buildPreviewText(String(raw.summary || ""), body),
-    readingTimeMinutes: Math.max(1, Math.round(stats.minutes))
+    readingTimeMinutes
   };
 }
 
