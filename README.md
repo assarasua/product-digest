@@ -169,6 +169,10 @@ npx @opennextjs/cloudflare build
 npx @opennextjs/cloudflare deploy
 ```
 
+Important:
+- Use only `wrangler.jsonc` (OpenNext). Do not deploy with legacy `.vercel/output/static` config.
+- If you see `/_next/static/... 404`, purge Cloudflare cache after deploy.
+
 ## Railway Subscribe API (PostgreSQL)
 
 Use this backend to store newsletter emails in Railway Postgres and connect it
