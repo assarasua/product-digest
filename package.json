@@ -36,7 +36,8 @@
     "publish:scheduled": "node scripts/publish-scheduled-posts.mjs",
     "publish:scheduled:push": "node scripts/publish-scheduled-posts-push.mjs",
     "check:api": "node scripts/check-api.mjs",
-    "seed:likes:past": "node scripts/seed-random-likes-past-posts.mjs"
+    "seed:likes:past": "node scripts/seed-random-likes-past-posts.mjs",
+    "seed:likes:missing": "node scripts/seed-missing-likes.mjs"
   },
   "dependencies": {
     "@fontsource/source-sans-3": "^5.2.9",
