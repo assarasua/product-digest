@@ -61,6 +61,11 @@ export function LikeButton({ slug }: LikeButtonProps) {
 
     setSubmitting(true);
     try {
+      const optimisticLikes = likes + 1;
+      setLikes(optimisticLikes);
+      setLiked(true);
+      window.localStorage.setItem(storageKey, "1");
+
       const response = await fetch(`${apiBaseUrl}/api/likes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,9 +77,7 @@ export function LikeButton({ slug }: LikeButtonProps) {
       }
 
       const payload = (await response.json()) as { likes?: number };
-      setLikes(typeof payload.likes === "number" ? payload.likes : likes + 1);
-      setLiked(true);
-      window.localStorage.setItem(storageKey, "1");
+      setLikes(typeof payload.likes === "number" ? payload.likes : optimisticLikes);
     } finally {
       setSubmitting(false);
     }
@@ -85,7 +88,7 @@ export function LikeButton({ slug }: LikeButtonProps) {
       <button
         type="button"
         className={`like-button like-icon${liked ? " is-liked" : ""}`}
-        disabled={liked || submitting || loading}
+        disabled={liked || submitting}
         onClick={handleLike}
         aria-label={liked ? "Ya te gusta este artículo" : "Dar me gusta a este artículo"}
         title={liked ? "Ya te gusta" : "Me gusta"}
