@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { PostCard } from "@/components/PostCard";
-import { getPostsByTagRuntime } from "@/lib/content";
+import { getPostsByTagFromApi } from "@/lib/posts-api";
 import { ogImageUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ tag: stri
 
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
   const { tag } = await params;
-  const posts = await getPostsByTagRuntime(tag);
+  const posts = await getPostsByTagFromApi(tag);
 
   return (
     <div className="page-wrap">

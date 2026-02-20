@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ArticleLayout } from "@/components/ArticleLayout";
 import { ReadingProgress } from "@/components/ReadingProgress";
 import { compilePost } from "@/lib/compile-post";
-import { getPostBySlugRuntime } from "@/lib/content";
+import { getPostBySlugFromApi } from "@/lib/posts-api";
 import { absoluteUrl, getSiteUrl, ogImageUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export const runtime = "edge";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlugRuntime(slug);
+  const post = await getPostBySlugFromApi(slug);
 
   if (!post) {
     return {
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = await getPostBySlugRuntime(slug);
+  const post = await getPostBySlugFromApi(slug);
 
   if (!post) {
     notFound();
