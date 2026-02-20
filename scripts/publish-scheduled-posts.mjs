@@ -93,6 +93,10 @@ async function run() {
       id BIGSERIAL PRIMARY KEY,
       slug TEXT NOT NULL UNIQUE,
       markdown_path TEXT NOT NULL,
+      title TEXT,
+      summary TEXT,
+      content_md TEXT,
+      tags TEXT[] DEFAULT '{}',
       scheduled_at TIMESTAMPTZ NOT NULL,
       timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
       status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('draft', 'scheduled', 'published')),
@@ -102,68 +106,107 @@ async function run() {
     )
   `);
 
-  const dueFromPosts = await pool.query(
-    `UPDATE posts
-     SET status = 'published',
-         published_at = COALESCE(published_at, NOW()),
-         updated_at = NOW()
-     WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= NOW()
-     RETURNING slug, scheduled_at`
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS title TEXT`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS summary TEXT`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS content_md TEXT`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`);
+
+  const dueScheduled = await pool.query(
+    `SELECT id, slug, markdown_path, title, summary, content_md, tags, scheduled_at
+     FROM scheduled_posts
+     WHERE status = 'scheduled' AND scheduled_at <= NOW()
+     ORDER BY scheduled_at ASC`
   );
 
-  if (dueFromPosts.rowCount === 0) {
+  if (dueScheduled.rowCount === 0) {
     console.log("No scheduled posts are due.");
     await pool.end();
     return;
   }
 
-  const publishedBySlug = new Map(
-    dueFromPosts.rows.map((row) => [String(row.slug), new Date(row.scheduled_at).toISOString()])
-  );
-
-  await pool.query(
-    `UPDATE scheduled_posts
-     SET status = 'published',
-         published_at = NOW(),
-         updated_at = NOW()
-     WHERE slug = ANY($1::text[]) AND status = 'scheduled'`,
-    [Array.from(publishedBySlug.keys())]
-  );
-
   let publishedCount = 0;
-  for (const [slug, scheduledAt] of publishedBySlug.entries()) {
-    if (updateMdx) {
-      let filePath = resolveMarkdownPath(
-        String(
-          (
-            await pool.query(`SELECT markdown_path FROM scheduled_posts WHERE slug = $1 LIMIT 1`, [slug])
-          ).rows[0]?.markdown_path || ""
-        )
-      );
+  for (const row of dueScheduled.rows) {
+    const slug = String(row.slug);
+    const scheduledAt = new Date(row.scheduled_at).toISOString();
+    let title = String(row.title || "").trim();
+    let summary = String(row.summary || "").trim();
+    let contentMd = String(row.content_md || "").trim();
+    let tags = Array.isArray(row.tags) ? row.tags.map((item) => String(item).toLowerCase()) : [];
+    let filePath = resolveMarkdownPath(String(row.markdown_path || ""));
 
-      if (!filePath || !fs.existsSync(filePath)) {
-        const fallbackName = findMarkdownBySlug(slug);
-        if (!fallbackName) {
-          console.warn(`Skipping MDX sync for ${slug}: markdown file not found.`);
-          publishedCount += 1;
-          continue;
-        }
+    if ((!title || !summary || !contentMd || tags.length === 0) && (!filePath || !fs.existsSync(filePath))) {
+      const fallbackName = findMarkdownBySlug(slug);
+      if (fallbackName) {
         filePath = path.join(postsDir, fallbackName);
       }
-
-      const updatedPath = updateMarkdown(filePath, scheduledAt, slug);
-      const markdownPath = relativeToRoot(updatedPath);
-      await pool.query(
-        `UPDATE scheduled_posts
-         SET markdown_path = $1,
-             updated_at = NOW()
-         WHERE slug = $2`,
-        [markdownPath, slug]
-      );
-      console.log(`Published scheduled post: ${slug} (${markdownPath})`);
-    } else {
-      console.log(`Published scheduled post in DB: ${slug}`);
     }
+
+    if ((!title || !summary || !contentMd || tags.length === 0) && filePath && fs.existsSync(filePath)) {
+      const source = fs.readFileSync(filePath, "utf8");
+      const parsed = matter(source);
+      title = title || String(parsed.data.title || slug);
+      summary = summary || String(parsed.data.summary || "");
+      contentMd = contentMd || String(parsed.content || "");
+      tags = tags.length > 0
+        ? tags
+        : Array.isArray(parsed.data.tags)
+          ? parsed.data.tags.map((item) => String(item).toLowerCase())
+          : [];
+    }
+
+    if (updateMdx) {
+      if (filePath && fs.existsSync(filePath)) {
+        const updatedPath = updateMarkdown(filePath, scheduledAt, slug);
+        const markdownPath = relativeToRoot(updatedPath);
+        await pool.query(
+          `UPDATE scheduled_posts
+           SET markdown_path = $1,
+               title = COALESCE(NULLIF($2, ''), title),
+               summary = COALESCE(NULLIF($3, ''), summary),
+               content_md = COALESCE(NULLIF($4, ''), content_md),
+               tags = CASE WHEN array_length($5::text[], 1) IS NULL THEN tags ELSE $5::text[] END,
+               updated_at = NOW()
+           WHERE slug = $6`,
+          [markdownPath, title, summary, contentMd, tags, slug]
+        );
+      }
+    }
+
+    if (!title || !summary || !contentMd) {
+      console.warn(`Skipping ${slug}: missing title/summary/content.`);
+      continue;
+    }
+
+    await pool.query(
+      `INSERT INTO posts (slug, title, summary, content_md, tags, status, scheduled_at, published_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5::text[], 'published', $6::timestamptz, NOW(), NOW())
+       ON CONFLICT (slug)
+       DO UPDATE SET
+         title = EXCLUDED.title,
+         summary = EXCLUDED.summary,
+         content_md = EXCLUDED.content_md,
+         tags = EXCLUDED.tags,
+         status = 'published',
+         scheduled_at = EXCLUDED.scheduled_at,
+         published_at = COALESCE(posts.published_at, NOW()),
+         updated_at = NOW()`,
+      [slug, title, summary, contentMd, tags, scheduledAt]
+    );
+
+    await pool.query(
+      `UPDATE scheduled_posts
+       SET status = 'published',
+           published_at = NOW(),
+           title = COALESCE(NULLIF($1, ''), title),
+           summary = COALESCE(NULLIF($2, ''), summary),
+           content_md = COALESCE(NULLIF($3, ''), content_md),
+           tags = CASE WHEN array_length($4::text[], 1) IS NULL THEN tags ELSE $4::text[] END,
+           updated_at = NOW()
+       WHERE id = $5`,
+      [title, summary, contentMd, tags, row.id]
+    );
+
+    console.log(`Published scheduled post: ${slug}`);
     publishedCount += 1;
   }
 

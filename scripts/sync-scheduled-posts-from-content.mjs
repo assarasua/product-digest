@@ -36,26 +36,14 @@ async function run() {
   });
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS posts (
-      id BIGSERIAL PRIMARY KEY,
-      slug TEXT NOT NULL UNIQUE,
-      title TEXT NOT NULL,
-      summary TEXT NOT NULL,
-      content_md TEXT NOT NULL,
-      tags TEXT[] NOT NULL DEFAULT '{}',
-      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'published')),
-      scheduled_at TIMESTAMPTZ NULL,
-      published_at TIMESTAMPTZ NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `);
-
-  await pool.query(`
     CREATE TABLE IF NOT EXISTS scheduled_posts (
       id BIGSERIAL PRIMARY KEY,
       slug TEXT NOT NULL UNIQUE,
       markdown_path TEXT NOT NULL,
+      title TEXT,
+      summary TEXT,
+      content_md TEXT,
+      tags TEXT[] DEFAULT '{}',
       scheduled_at TIMESTAMPTZ NOT NULL,
       timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
       status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('draft', 'scheduled', 'published')),
@@ -64,6 +52,11 @@ async function run() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS title TEXT`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS summary TEXT`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS content_md TEXT`);
+  await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`);
 
   const files = fs.readdirSync(postsDir).filter((name) => name.endsWith(".mdx") || name.endsWith(".md"));
   let synced = 0;
@@ -76,49 +69,26 @@ async function run() {
     const slug = extractSlug(fileName);
     const markdownPath = path.relative(rootDir, fullPath).replaceAll("\\", "/");
     const scheduledAt = parsed.data.publishAt || buildDefaultScheduledAt(parsed.data.date);
-    const hasValidSchedule = Boolean(scheduledAt && !Number.isNaN(Date.parse(scheduledAt)));
-    const status = hasValidSchedule ? "scheduled" : "draft";
-
-    await pool.query(
-      `INSERT INTO posts (slug, title, summary, content_md, tags, status, scheduled_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5::text[], $6, $7::timestamptz, NOW())
-       ON CONFLICT (slug)
-       DO UPDATE SET
-         title = EXCLUDED.title,
-         summary = EXCLUDED.summary,
-         content_md = EXCLUDED.content_md,
-         tags = EXCLUDED.tags,
-         status = CASE
-           WHEN posts.status = 'published' THEN posts.status
-           ELSE EXCLUDED.status
-         END,
-         scheduled_at = CASE
-           WHEN posts.status = 'published' THEN posts.scheduled_at
-           ELSE EXCLUDED.scheduled_at
-         END,
-         updated_at = NOW()`,
-      [
-        slug,
-        String(parsed.data.title || slug),
-        String(parsed.data.summary || ""),
-        String(parsed.content || ""),
-        Array.isArray(parsed.data.tags) ? parsed.data.tags.map((tag) => String(tag).toLowerCase()) : [],
-        status,
-        hasValidSchedule ? scheduledAt : null
-      ]
-    );
-
-    if (!hasValidSchedule) {
+    if (!scheduledAt || Number.isNaN(Date.parse(scheduledAt))) {
       synced += 1;
       continue;
     }
 
+    const title = String(parsed.data.title || slug);
+    const summary = String(parsed.data.summary || "");
+    const contentMd = String(parsed.content || "");
+    const tags = Array.isArray(parsed.data.tags) ? parsed.data.tags.map((tag) => String(tag).toLowerCase()) : [];
+
     await pool.query(
-      `INSERT INTO scheduled_posts (slug, markdown_path, scheduled_at, timezone, status, updated_at)
-       VALUES ($1, $2, $3::timestamptz, $4, 'scheduled', NOW())
+      `INSERT INTO scheduled_posts (slug, markdown_path, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6::text[], $7::timestamptz, $8, 'scheduled', NOW())
        ON CONFLICT (slug)
        DO UPDATE SET
          markdown_path = EXCLUDED.markdown_path,
+         title = EXCLUDED.title,
+         summary = EXCLUDED.summary,
+         content_md = EXCLUDED.content_md,
+         tags = EXCLUDED.tags,
          scheduled_at = EXCLUDED.scheduled_at,
          timezone = EXCLUDED.timezone,
          status = CASE
@@ -126,7 +96,7 @@ async function run() {
            ELSE 'scheduled'
          END,
          updated_at = NOW()`,
-      [slug, markdownPath, scheduledAt, defaultTimezone]
+      [slug, markdownPath, title, summary, contentMd, tags, scheduledAt, defaultTimezone]
     );
 
     synced += 1;

@@ -35,17 +35,17 @@ const contentMd = contentFile
 
 if (!slug || !title || !summary) {
   console.error(
-    "Usage: npm run new:post:db -- --slug <slug> --title <title> --summary <summary> [--scheduledAt <ISO>] [--tags a,b] [--contentFile <path>|--content <text>]"
+    "Usage: npm run new:post:db -- --slug <slug> --title <title> --summary <summary> --scheduledAt <ISO> [--tags a,b] [--contentFile <path>|--content <text>]"
   );
   process.exit(1);
 }
 
-if (scheduledAt && Number.isNaN(Date.parse(scheduledAt))) {
-  console.error("Invalid --scheduledAt. Use ISO date-time.");
+if (!scheduledAt || Number.isNaN(Date.parse(scheduledAt))) {
+  console.error("Missing or invalid --scheduledAt. Use ISO date-time.");
   process.exit(1);
 }
 
-const status = scheduledAt ? "scheduled" : "draft";
+const status = "scheduled";
 
 const pool = new pg.Pool({
   connectionString: databaseUrl,
@@ -55,35 +55,39 @@ const pool = new pg.Pool({
 });
 
 await pool.query(`
-  CREATE TABLE IF NOT EXISTS posts (
+  CREATE TABLE IF NOT EXISTS scheduled_posts (
     id BIGSERIAL PRIMARY KEY,
     slug TEXT NOT NULL UNIQUE,
+    markdown_path TEXT NOT NULL,
     title TEXT NOT NULL,
     summary TEXT NOT NULL,
     content_md TEXT NOT NULL,
-    tags TEXT[] NOT NULL DEFAULT '{}',
+    tags TEXT[] DEFAULT '{}',
     status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'published')),
     scheduled_at TIMESTAMPTZ NULL,
     published_at TIMESTAMPTZ NULL,
+    timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )
 `);
 
 const result = await pool.query(
-  `INSERT INTO posts (slug, title, summary, content_md, tags, status, scheduled_at, updated_at)
-   VALUES ($1, $2, $3, $4, $5::text[], $6, $7::timestamptz, NOW())
+  `INSERT INTO scheduled_posts (slug, markdown_path, title, summary, content_md, tags, status, scheduled_at, timezone, updated_at)
+   VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8::timestamptz, $9, NOW())
    ON CONFLICT (slug)
    DO UPDATE SET
+     markdown_path = EXCLUDED.markdown_path,
      title = EXCLUDED.title,
      summary = EXCLUDED.summary,
      content_md = EXCLUDED.content_md,
      tags = EXCLUDED.tags,
      status = EXCLUDED.status,
      scheduled_at = EXCLUDED.scheduled_at,
+     timezone = EXCLUDED.timezone,
      updated_at = NOW()
    RETURNING slug, status, scheduled_at`,
-  [slug, title, summary, contentMd, tags, status, scheduledAt]
+  [slug, `db://${slug}`, title, summary, contentMd, tags, status, scheduledAt, process.env.SCHEDULE_TIMEZONE || "Europe/Madrid"]
 );
 
 await pool.end();

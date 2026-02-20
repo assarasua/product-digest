@@ -46,13 +46,14 @@ Example cron (daily at 07:00 CET):
 
 ## Scheduled publishing with database (recommended cloud flow)
 
-The project supports scheduled publication from PostgreSQL using a `scheduled_posts`
-table. Each row points to an MDX file (`markdown_path`) and a `scheduled_at` timestamp.
-When due, publication updates the article frontmatter to:
-- `draft: false`
-- `date` (from scheduled date)
-- `publishAt` (ISO date-time)
-- `updatedAt`
+The project uses a two-table production flow:
+
+- `scheduled_posts`: queue of drafts planned for publication.
+- `posts`: published content consumed by the site/API.
+
+When a row in `scheduled_posts` becomes due (`scheduled_at <= NOW()`), the
+publisher upserts it into `posts` as `published` and marks the scheduled row as
+`published`. MDX updates are optional (`PUBLISH_UPDATE_MDX=1`).
 
 ### Commands
 
@@ -61,15 +62,15 @@ DATABASE_URL="postgresql://..." npm run schedule:sync
 DATABASE_URL="postgresql://..." npm run publish:scheduled
 ```
 
-- `schedule:sync`: upserts draft MDX posts into `scheduled_posts`.
-- `publish:scheduled`: publishes rows where `scheduled_at <= NOW()`.
+- `schedule:sync`: backfills draft MDX posts into `scheduled_posts`.
+- `publish:scheduled`: moves due rows from `scheduled_posts` to `posts`.
 
 ### Cloud scheduler
 
 GitHub Actions workflow:
 
 - File: `.github/workflows/publish-scheduled.yml`
-- Frequency: every 5 minutes
+- Frequency: daily (plus manual `workflow_dispatch`)
 - Required secret: `DATABASE_URL`
 - Behavior: publish due posts, regenerate search index, commit and push to `main` when there are changes.
 
@@ -197,7 +198,11 @@ Server endpoints:
 - `GET /api/scheduled-posts`
 - `POST /api/scheduled-posts` with body:
   - `slug`
-  - `markdownPath`
+  - `markdownPath` (optional, defaults to `db://<slug>`)
+  - `title` (optional if MDX path is provided)
+  - `summary` (optional if MDX path is provided)
+  - `contentMd` (optional if MDX path is provided)
+  - `tags` (`string[]`, optional)
   - `scheduledAt` (ISO)
   - `timezone` (optional, default `Europe/Madrid`)
   - `status` (`draft|scheduled|published`, optional)
@@ -225,9 +230,9 @@ DATABASE_URL="postgresql://..." npm run new:post:db -- \
 DATABASE_URL="postgresql://..." npm run publish:scheduled
 ```
 
-`publish:scheduled` now marks posts as `published` in PostgreSQL when
-`scheduled_at <= NOW()`. Set `PUBLISH_UPDATE_MDX=1` only if you also want to
-keep legacy MDX files synchronized.
+`publish:scheduled` publishes from `scheduled_posts` into `posts` in PostgreSQL
+when `scheduled_at <= NOW()`. Set `PUBLISH_UPDATE_MDX=1` only if you also want
+to keep legacy MDX files synchronized.
 
 ### Connect frontend (Cloudflare)
 

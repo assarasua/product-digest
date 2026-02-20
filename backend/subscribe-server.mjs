@@ -55,6 +55,10 @@ await pool.query(`
     id BIGSERIAL PRIMARY KEY,
     slug TEXT NOT NULL UNIQUE,
     markdown_path TEXT NOT NULL,
+    title TEXT,
+    summary TEXT,
+    content_md TEXT,
+    tags TEXT[] DEFAULT '{}',
     scheduled_at TIMESTAMPTZ NOT NULL,
     timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
     status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('draft', 'scheduled', 'published')),
@@ -63,6 +67,11 @@ await pool.query(`
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )
 `);
+
+await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS title TEXT`);
+await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS summary TEXT`);
+await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS content_md TEXT`);
+await pool.query(`ALTER TABLE scheduled_posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`);
 
 await pool.query(`
   CREATE TABLE IF NOT EXISTS posts (
@@ -344,22 +353,58 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const result = await pool.query(
-        `UPDATE posts
-         SET status = 'scheduled',
-             scheduled_at = $2::timestamptz,
-             updated_at = NOW()
-         WHERE slug = $1
-         RETURNING slug, status, scheduled_at`,
-        [slugFromPath, scheduledAt]
+      const existingScheduled = await pool.query(
+        `SELECT slug FROM scheduled_posts WHERE slug = $1 LIMIT 1`,
+        [slugFromPath]
       );
 
-      if (result.rowCount === 0) {
+      if (existingScheduled.rowCount > 0) {
+        const scheduled = await pool.query(
+          `UPDATE scheduled_posts
+           SET status = 'scheduled',
+               scheduled_at = $2::timestamptz,
+               published_at = NULL,
+               updated_at = NOW()
+           WHERE slug = $1
+           RETURNING slug, status, scheduled_at`,
+          [slugFromPath, scheduledAt]
+        );
+        send(res, 200, { ok: true, post: scheduled.rows[0] });
+        return;
+      }
+
+      const existingPost = await pool.query(
+        `SELECT slug, title, summary, content_md, tags
+         FROM posts
+         WHERE slug = $1
+         LIMIT 1`,
+        [slugFromPath]
+      );
+
+      if (existingPost.rowCount === 0) {
         send(res, 404, { error: "not_found" });
         return;
       }
 
-      send(res, 200, { ok: true, post: result.rows[0] });
+      const row = existingPost.rows[0];
+      const scheduled = await pool.query(
+        `INSERT INTO scheduled_posts (slug, markdown_path, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6::text[], $7::timestamptz, 'Europe/Madrid', 'scheduled', NOW())
+         ON CONFLICT (slug)
+         DO UPDATE SET
+           title = EXCLUDED.title,
+           summary = EXCLUDED.summary,
+           content_md = EXCLUDED.content_md,
+           tags = EXCLUDED.tags,
+           scheduled_at = EXCLUDED.scheduled_at,
+           status = 'scheduled',
+           published_at = NULL,
+           updated_at = NOW()
+         RETURNING slug, status, scheduled_at`,
+        [slugFromPath, `db://${slugFromPath}`, row.title, row.summary, row.content_md, row.tags, scheduledAt]
+      );
+
+      send(res, 200, { ok: true, post: scheduled.rows[0] });
       return;
     } catch {
       send(res, 500, { error: "db_error" });
@@ -373,6 +418,46 @@ const server = http.createServer(async (req, res) => {
         send(res, 400, { error: "invalid_slug" });
         return;
       }
+
+      const scheduled = await pool.query(
+        `SELECT slug, title, summary, content_md, tags, scheduled_at
+         FROM scheduled_posts
+         WHERE slug = $1
+         LIMIT 1`,
+        [slugFromPath]
+      );
+
+      if (scheduled.rowCount > 0) {
+        const row = scheduled.rows[0];
+        await pool.query(
+          `INSERT INTO posts (slug, title, summary, content_md, tags, status, scheduled_at, published_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5::text[], 'published', $6::timestamptz, NOW(), NOW())
+           ON CONFLICT (slug)
+           DO UPDATE SET
+             title = EXCLUDED.title,
+             summary = EXCLUDED.summary,
+             content_md = EXCLUDED.content_md,
+             tags = EXCLUDED.tags,
+             status = 'published',
+             scheduled_at = EXCLUDED.scheduled_at,
+             published_at = COALESCE(posts.published_at, NOW()),
+             updated_at = NOW()`,
+          [row.slug, row.title || row.slug, row.summary || "", row.content_md || "", row.tags || [], row.scheduled_at]
+        );
+
+        const scheduledDone = await pool.query(
+          `UPDATE scheduled_posts
+           SET status = 'published',
+               published_at = NOW(),
+               updated_at = NOW()
+           WHERE slug = $1
+           RETURNING slug, status, published_at`,
+          [slugFromPath]
+        );
+        send(res, 200, { ok: true, post: scheduledDone.rows[0] });
+        return;
+      }
+
       const result = await pool.query(
         `UPDATE posts
          SET status = 'published',
@@ -399,7 +484,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && isScheduledPostsPath) {
     try {
       const result = await pool.query(
-        `SELECT slug, markdown_path, scheduled_at, timezone, status, published_at, updated_at
+        `SELECT slug, markdown_path, title, summary, content_md, tags, scheduled_at, timezone, status, published_at, updated_at
          FROM scheduled_posts
          ORDER BY scheduled_at ASC`
       );
@@ -417,7 +502,14 @@ const server = http.createServer(async (req, res) => {
       const payload = JSON.parse(body || "{}");
 
       const slug = String(payload.slug || "").trim().toLowerCase();
-      const markdownPath = String(payload.markdownPath || "").trim();
+      const markdownPathRaw = String(payload.markdownPath || "").trim();
+      const markdownPath = markdownPathRaw || `db://${slug}`;
+      const title = String(payload.title || "").trim();
+      const summary = String(payload.summary || "").trim();
+      const contentMd = String(payload.contentMd || payload.content_md || "").trim();
+      const tags = Array.isArray(payload.tags)
+        ? payload.tags.map((item) => String(item).trim().toLowerCase()).filter(Boolean)
+        : [];
       const scheduledAt = String(payload.scheduledAt || "").trim();
       const timezone = String(payload.timezone || "Europe/Madrid").trim();
       const status = String(payload.status || "scheduled").trim();
@@ -426,7 +518,7 @@ const server = http.createServer(async (req, res) => {
         send(res, 400, { error: "invalid_slug" });
         return;
       }
-      if (!markdownPath || !markdownPath.includes("content/posts/")) {
+      if (!markdownPath.startsWith("db://") && !markdownPath.includes("content/posts/")) {
         send(res, 400, { error: "invalid_markdown_path" });
         return;
       }
@@ -443,20 +535,25 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      await pool.query(
-        `INSERT INTO scheduled_posts (slug, markdown_path, scheduled_at, timezone, status, updated_at)
-         VALUES ($1, $2, $3::timestamptz, $4, $5, NOW())
+      const scheduledResult = await pool.query(
+        `INSERT INTO scheduled_posts (slug, markdown_path, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6::text[], $7::timestamptz, $8, $9, NOW())
          ON CONFLICT (slug)
          DO UPDATE SET
            markdown_path = EXCLUDED.markdown_path,
+           title = COALESCE(NULLIF(EXCLUDED.title, ''), scheduled_posts.title),
+           summary = COALESCE(NULLIF(EXCLUDED.summary, ''), scheduled_posts.summary),
+           content_md = COALESCE(NULLIF(EXCLUDED.content_md, ''), scheduled_posts.content_md),
+           tags = CASE WHEN array_length(EXCLUDED.tags, 1) IS NULL THEN scheduled_posts.tags ELSE EXCLUDED.tags END,
            scheduled_at = EXCLUDED.scheduled_at,
            timezone = EXCLUDED.timezone,
            status = EXCLUDED.status,
-           updated_at = NOW()`,
-        [slug, markdownPath, scheduledAt, timezone, status]
+           updated_at = NOW()
+         RETURNING slug, scheduled_at, status`,
+        [slug, markdownPath, title, summary, contentMd, tags, scheduledAt, timezone, status]
       );
 
-      send(res, 200, { ok: true, slug, scheduledAt, status });
+      send(res, 200, { ok: true, post: scheduledResult.rows[0] });
       return;
     } catch {
       send(res, 500, { error: "db_error" });
