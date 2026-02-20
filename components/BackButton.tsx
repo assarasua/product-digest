@@ -11,16 +11,16 @@ export function BackButton() {
       return;
     }
 
-    const sameOriginReferrer = document.referrer.startsWith(window.location.origin);
-    if (sameOriginReferrer) {
-      const referrerUrl = new URL(document.referrer);
-      const target = `${referrerUrl.pathname}${referrerUrl.search}${referrerUrl.hash}`;
-      router.push(target || "/");
-      return;
-    }
+    const currentUrl = window.location.href;
 
+    // Prefer browser history for real back navigation.
     if (window.history.length > 1) {
-      router.back();
+      window.history.back();
+      window.setTimeout(() => {
+        if (window.location.href === currentUrl) {
+          router.push("/");
+        }
+      }, 250);
       return;
     }
 
