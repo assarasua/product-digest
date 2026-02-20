@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { ConsentPlausibleScript, CookieBanner } from "@/components/CookieBanner";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { ogImageUrl } from "@/lib/seo";
 import { Providers } from "./providers";
@@ -91,7 +90,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="es">
       <body>
         <Providers>
-          <ConsentPlausibleScript plausibleDomain={plausibleDomain} />
+          {plausibleDomain ? (
+            <script
+              defer
+              data-domain={plausibleDomain}
+              src="https://plausible.io/js/script.outbound-links.js"
+            />
+          ) : null}
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
           <div className="site-shell">
             <header className="site-header">
@@ -113,7 +118,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <NewsletterSignup />
             </div>
           </div>
-          <CookieBanner />
         </Providers>
       </body>
     </html>
