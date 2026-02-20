@@ -5,7 +5,6 @@ import { getPostsByTagFromApi } from "@/lib/posts-api";
 import { ogImageUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export const runtime = "edge";
 
 export async function generateMetadata({ params }: { params: Promise<{ tag: string }> }): Promise<Metadata> {
   const { tag } = await params;

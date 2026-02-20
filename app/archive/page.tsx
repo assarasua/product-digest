@@ -5,7 +5,6 @@ import { getArchiveFromApi } from "@/lib/posts-api";
 import { formatDate, formatMonth } from "@/lib/format";
 import { ogImageUrl } from "@/lib/seo";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {

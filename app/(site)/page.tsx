@@ -7,7 +7,6 @@ import { PostCard } from "@/components/PostCard";
 import { getAllPostsFromApi } from "@/lib/posts-api";
 import { ogImageUrl } from "@/lib/seo";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
