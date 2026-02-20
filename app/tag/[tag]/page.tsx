@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 
 import { PostCard } from "@/components/PostCard";
-import { getAllTagsRuntime, getPostsByTagRuntime } from "@/lib/content";
+import { getPostsByTagRuntime } from "@/lib/content";
 import { ogImageUrl } from "@/lib/seo";
 
-export async function generateStaticParams() {
-  const tags = await getAllTagsRuntime();
-  return tags.map(({ tag }) => ({ tag }));
-}
+export const dynamic = "force-dynamic";
+export const runtime = "edge";
 
 export async function generateMetadata({ params }: { params: Promise<{ tag: string }> }): Promise<Metadata> {
   const { tag } = await params;
