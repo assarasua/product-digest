@@ -71,7 +71,6 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -90,13 +89,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="es">
       <body>
         <Providers>
-          {plausibleDomain ? (
-            <script
-              defer
-              data-domain={plausibleDomain}
-              src="https://plausible.io/js/script.outbound-links.js"
-            />
-          ) : null}
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
           <div className="site-shell">
             <header className="site-header">

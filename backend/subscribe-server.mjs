@@ -76,7 +76,7 @@ function send(res, status, payload) {
     "Content-Type": "application/json; charset=utf-8",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, PATCH, OPTIONS, GET",
-    "Access-Control-Allow-Headers": "Content-Type"
+    "Access-Control-Allow-Headers": "Content-Type, Authorization"
   });
   res.end(JSON.stringify(payload));
 }
@@ -130,7 +130,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, PATCH, OPTIONS, GET",
-      "Access-Control-Allow-Headers": "Content-Type"
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
     });
     res.end();
     return;
@@ -156,7 +156,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === "GET" && parsed.pathname === "/healthz") {
+  if (
+    req.method === "GET" &&
+    (parsed.pathname === "/healthz" || parsed.pathname === "/health" || parsed.pathname === "/api/healthz")
+  ) {
     send(res, 200, { ok: true });
     return;
   }

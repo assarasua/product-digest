@@ -139,7 +139,6 @@ npm run build:local
 ## Environment variables
 
 - `NEXT_PUBLIC_SITE_URL` for canonical URLs and feed/sitemap links.
-- `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to enable Plausible outbound-links analytics.
 - `PUBLISH_GIT_REMOTE` optional (default `origin`) for cron publish script.
 - `PUBLISH_GIT_BRANCH` optional (default `main`) for cron publish script.
 - `PUBLISH_GIT_SSH_KEY` optional SSH private key path for cron non-interactive push.
@@ -175,6 +174,14 @@ npx @opennextjs/cloudflare deploy
 Use this backend to store newsletter emails in Railway Postgres and connect it
 to the Edge route used by the site.
 
+Railway deploy settings (important):
+- Root Directory: `backend`
+- Start Command: `npm start`
+- Healthcheck Path: `/healthz` (also available: `/health`, `/api/healthz`)
+- Required env vars:
+  - `DATABASE_URL`
+  - `CRON_SECRET` (if using scheduler endpoint `/api/posts/publish-due`)
+
 ### Start backend locally
 
 ```bash
@@ -183,7 +190,7 @@ DATABASE_URL="postgresql://..." npm run backend:start
 ```
 
 Server endpoints:
-- `GET /api/posts?status=published|scheduled|draft|all&tag=<tag>&q=<query>&limit=20&offset=0`
+- `GET /api/posts?status=published|scheduled|all&tag=<tag>&q=<query>&limit=20&offset=0`
 - `GET /api/posts/:slug`
 - `POST /api/posts` with body:
   - `slug`
@@ -191,7 +198,7 @@ Server endpoints:
   - `summary`
   - `contentMd`
   - `tags` (`string[]`)
-  - `status` (`draft|scheduled|published`)
+  - `status` (`scheduled|published`)
   - `scheduledAt` (optional ISO)
 - `PATCH /api/posts/:slug/schedule` with body `{ "scheduledAt": "<ISO>" }`
 - `POST /api/posts/:slug/publish`
@@ -211,7 +218,7 @@ Server endpoints:
   - `tags` (`string[]`, optional)
   - `scheduledAt` (ISO)
   - `timezone` (optional, default `Europe/Madrid`)
-  - `status` (`draft|scheduled|published`, optional)
+  - `status` (`scheduled|published`, optional)
 - `GET /healthz`
 
 ### DB-first publishing flow (production)
@@ -242,10 +249,10 @@ synchronized.
 
 ### Connect frontend (Cloudflare)
 
-The frontend currently posts directly to:
+Set frontend API base URL:
 
 ```bash
-https://api.productdigest.es/api/subscribers
+NEXT_PUBLIC_POSTS_API_BASE_URL=https://api.productdigest.es
 ```
 
 For Product Leaders wiki data:
