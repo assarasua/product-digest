@@ -1,0 +1,9 @@
+name = "product-digest-scheduler"
+main = "src/index.js"
+compatibility_date = "2026-02-20"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+PUBLISH_API_URL = "https://api.productdigest.es"

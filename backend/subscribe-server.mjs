@@ -67,6 +67,7 @@ await pool.query(`
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )
 `);
+await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS posts_slug_lower_uidx ON posts (lower(slug))`);
 await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
 await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Madrid'`);
 
@@ -109,6 +110,19 @@ function readBody(req) {
   });
 }
 
+function isAuthorizedCronRequest(req) {
+  const expected = String(process.env.CRON_SECRET || "").trim();
+  if (!expected) {
+    return false;
+  }
+  const authHeader = String(req.headers.authorization || "").trim();
+  if (!authHeader.toLowerCase().startsWith("bearer ")) {
+    return false;
+  }
+  const token = authHeader.slice(7).trim();
+  return token === expected;
+}
+
 const server = http.createServer(async (req, res) => {
   const parsed = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
 
@@ -132,6 +146,7 @@ const server = http.createServer(async (req, res) => {
         "GET /api/posts",
         "GET /api/posts/:slug",
         "POST /api/posts",
+        "POST /api/posts/publish-due",
         "PATCH /api/posts/:slug/schedule",
         "POST /api/posts/:slug/publish",
         "GET /api/scheduled-posts",
@@ -287,6 +302,36 @@ const server = http.createServer(async (req, res) => {
       );
 
       send(res, 200, { ok: true, post: result.rows[0] });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "POST" && parsed.pathname === "/api/posts/publish-due") {
+    if (!isAuthorizedCronRequest(req)) {
+      send(res, 401, { error: "unauthorized" });
+      return;
+    }
+
+    try {
+      const result = await pool.query(
+        `UPDATE posts
+         SET status = 'published',
+             published_at = COALESCE(published_at, NOW()),
+             updated_at = NOW()
+         WHERE status = 'scheduled'
+           AND scheduled_at IS NOT NULL
+           AND scheduled_at <= NOW()
+         RETURNING slug, scheduled_at, published_at`
+      );
+
+      send(res, 200, {
+        ok: true,
+        publishedCount: result.rowCount ?? 0,
+        posts: result.rows
+      });
       return;
     } catch {
       send(res, 500, { error: "db_error" });

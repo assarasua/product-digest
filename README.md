@@ -65,14 +65,32 @@ DATABASE_URL="postgresql://..." npm run publish:scheduled
 - `schedule:sync`: backfills scheduled MDX posts into `posts`.
 - `publish:scheduled`: publishes due rows in `posts`.
 
-### Cloud scheduler
+### Cloud scheduler (Cloudflare recommended)
 
-GitHub Actions workflow:
+Use Cloudflare Workers Cron as the primary scheduler for production.
 
-- File: `.github/workflows/publish-scheduled.yml`
-- Frequency: daily (plus manual `workflow_dispatch`)
-- Required secret: `DATABASE_URL`
-- Behavior: publish due posts, regenerate search index, commit and push to `main` when there are changes.
+1. Deploy backend with:
+   - `DATABASE_URL`
+   - `CRON_SECRET` (new shared secret)
+2. Deploy worker in `workers/scheduler`:
+   - `wrangler.toml` already configured with `*/5 * * * *`
+   - set secret `CRON_SECRET`
+   - optional var `PUBLISH_API_URL` (default `https://api.productdigest.es`)
+3. Deploy:
+
+```bash
+cd workers/scheduler
+npx wrangler secret put CRON_SECRET
+npx wrangler deploy
+```
+
+The worker calls:
+
+- `POST https://api.productdigest.es/api/posts/publish-due`
+- Header: `Authorization: Bearer <CRON_SECRET>`
+
+GitHub workflow `.github/workflows/publish-scheduled.yml` is now manual-only
+(`workflow_dispatch`) as a backup trigger.
 
 ### Git SSH (recommended)
 
@@ -190,6 +208,7 @@ Server endpoints:
   - `scheduledAt` (optional ISO)
 - `PATCH /api/posts/:slug/schedule` with body `{ "scheduledAt": "<ISO>" }`
 - `POST /api/posts/:slug/publish`
+- `POST /api/posts/publish-due` (requires `Authorization: Bearer <CRON_SECRET>`)
 - `POST /api/subscribe`
 - `POST /api/subscribers`
 - `GET /api/likes?slug=<post-slug>`
