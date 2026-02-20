@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const apiBaseUrl = "https://api.productdigest.es";
+const apiBaseUrl = (
+  process.env.NEXT_PUBLIC_POSTS_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://api.productdigest.es"
+).replace(/\/+$/, "");
 
 type LikeButtonProps = {
   slug: string;
@@ -12,35 +16,35 @@ export function LikeButton({ slug }: LikeButtonProps) {
   const storageKey = useMemo(() => `product-digest-like:${slug}`, [slug]);
   const [likes, setLikes] = useState<number>(0);
   const [liked, setLiked] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
+      setLoading(true);
       try {
         const wasLiked = window.localStorage.getItem(storageKey) === "1";
         if (!cancelled) {
           setLiked(wasLiked);
         }
 
-        const response = await fetch(`${apiBaseUrl}/api/likes?slug=${encodeURIComponent(slug)}`);
-        if (!response.ok) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 8000);
+        const response = await fetch(`${apiBaseUrl}/api/likes?slug=${encodeURIComponent(slug)}`, {
+          signal: controller.signal
+        });
+        window.clearTimeout(timeout);
+        if (response.ok) {
+          const payload = (await response.json()) as { likes?: number };
           if (!cancelled) {
-            setLoading(false);
+            setLikes(typeof payload.likes === "number" ? payload.likes : 0);
           }
-          return;
         }
-        const payload = (await response.json()) as { likes?: number };
-        if (!cancelled) {
-          setLikes(typeof payload.likes === "number" ? payload.likes : 0);
-          setLoading(false);
-        }
-      } catch {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      } catch {}
+      if (!cancelled) {
+        setLoading(false);
       }
     };
 
