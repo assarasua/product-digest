@@ -44,6 +44,35 @@ Example cron (daily at 07:00 CET):
 0 7 * * * cd /Users/axi/Documents/product-digest && PUBLISH_GIT_SSH_KEY=/Users/axi/.ssh/id_ed25519_assarasua_user /opt/homebrew/bin/node scripts/publish-next-draft-push.mjs >> /Users/axi/Documents/product-digest/logs/publish-cron.log 2>&1
 ```
 
+## Scheduled publishing with database (recommended cloud flow)
+
+The project supports scheduled publication from PostgreSQL using a `scheduled_posts`
+table. Each row points to an MDX file (`markdown_path`) and a `scheduled_at` timestamp.
+When due, publication updates the article frontmatter to:
+- `draft: false`
+- `date` (from scheduled date)
+- `publishAt` (ISO date-time)
+- `updatedAt`
+
+### Commands
+
+```bash
+DATABASE_URL="postgresql://..." npm run schedule:sync
+DATABASE_URL="postgresql://..." npm run publish:scheduled
+```
+
+- `schedule:sync`: upserts draft MDX posts into `scheduled_posts`.
+- `publish:scheduled`: publishes rows where `scheduled_at <= NOW()`.
+
+### Cloud scheduler
+
+GitHub Actions workflow:
+
+- File: `.github/workflows/publish-scheduled.yml`
+- Frequency: every 5 minutes
+- Required secret: `DATABASE_URL`
+- Behavior: publish due posts, regenerate search index, commit and push to `main` when there are changes.
+
 ### Git SSH (recommended)
 
 Use a GitHub **Authentication key** (user key), not a repository deploy key:
@@ -153,6 +182,13 @@ Server endpoints:
 - `GET /api/likes?slug=<post-slug>`
 - `POST /api/likes` with body `{ "slug": "<post-slug>" }`
 - `GET /api/product-leaders`
+- `GET /api/scheduled-posts`
+- `POST /api/scheduled-posts` with body:
+  - `slug`
+  - `markdownPath`
+  - `scheduledAt` (ISO)
+  - `timezone` (optional, default `Europe/Madrid`)
+  - `status` (`draft|scheduled|published`, optional)
 - `GET /healthz`
 
 ### Connect frontend (Cloudflare)

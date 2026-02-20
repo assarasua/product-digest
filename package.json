@@ -30,6 +30,9 @@
     "new:post": "node scripts/new-post.mjs",
     "publish:next-draft": "node scripts/publish-next-draft.mjs",
     "publish:next-draft:push": "node scripts/publish-next-draft-push.mjs",
+    "schedule:sync": "node scripts/sync-scheduled-posts-from-content.mjs",
+    "publish:scheduled": "node scripts/publish-scheduled-posts.mjs",
+    "publish:scheduled:push": "node scripts/publish-scheduled-posts-push.mjs",
     "check:api": "node scripts/check-api.mjs",
     "seed:likes:past": "node scripts/seed-random-likes-past-posts.mjs"
   },
