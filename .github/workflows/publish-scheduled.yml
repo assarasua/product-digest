@@ -2,8 +2,12 @@ name: publish-scheduled-posts
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
+
+concurrency:
+  group: publish-scheduled-posts
+  cancel-in-progress: false
 
 permissions:
   contents: write
