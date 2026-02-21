@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ogImageUrl } from "@/lib/seo";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 export const metadata: Metadata = {
   title: "Product Leaders",
@@ -45,9 +46,7 @@ async function getLeaders(): Promise<ProductLeader[]> {
     "https://api.productdigest.es";
 
   try {
-    const response = await fetch(`${apiBase}/api/product-leaders`, {
-      next: { revalidate: 3600 }
-    });
+    const response = await fetchWithTimeout(`${apiBase}/api/product-leaders`, { next: { revalidate: 3600 } }, 5000);
 
     if (!response.ok) {
       return [];

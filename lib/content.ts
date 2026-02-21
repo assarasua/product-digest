@@ -4,6 +4,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
 import { z } from "zod";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 const postsDir = path.join(process.cwd(), "content/posts");
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -181,9 +182,7 @@ export async function getRemotePublishedPosts(): Promise<Post[]> {
   const apiBase = getPostsApiBaseUrl();
   const url = `${apiBase}/api/posts?status=published&limit=1000`;
 
-  const response = await fetch(url, {
-    next: { revalidate: 60 }
-  });
+  const response = await fetchWithTimeout(url, { next: { revalidate: 60 } }, 5000);
 
   if (!response.ok) {
     throw new Error(`remote_posts_failed_${response.status}`);
