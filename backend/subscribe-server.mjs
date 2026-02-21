@@ -18,89 +18,94 @@ const pool = new pg.Pool({
   query_timeout: Number(process.env.DB_QUERY_TIMEOUT_MS || 6000)
 });
 
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS subscribers (
-    id BIGSERIAL PRIMARY KEY,
-    email TEXT NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )
-`);
+let dbReady = false;
+let dbInitError = "";
 
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS post_likes (
-    slug TEXT PRIMARY KEY,
-    likes_count INTEGER NOT NULL DEFAULT 0,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )
-`);
+async function initializeDatabase() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS subscribers (
+      id BIGSERIAL PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS product_leaders (
-    id BIGSERIAL PRIMARY KEY,
-    rank INTEGER NOT NULL UNIQUE,
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL DEFAULT '',
-    image_url TEXT NOT NULL,
-    description TEXT NOT NULL,
-    profile_url TEXT NOT NULL,
-    source_url TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )
-`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS post_likes (
+      slug TEXT PRIMARY KEY,
+      likes_count INTEGER NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 
-await pool.query(`ALTER TABLE product_leaders DROP CONSTRAINT IF EXISTS product_leaders_profile_url_key`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS product_leaders (
+      id BIGSERIAL PRIMARY KEY,
+      rank INTEGER NOT NULL UNIQUE,
+      first_name TEXT NOT NULL,
+      last_name TEXT NOT NULL DEFAULT '',
+      image_url TEXT NOT NULL,
+      description TEXT NOT NULL,
+      profile_url TEXT NOT NULL,
+      source_url TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS posts (
-    id BIGSERIAL PRIMARY KEY,
-    slug TEXT NOT NULL UNIQUE,
-    markdown_path TEXT NOT NULL DEFAULT '',
-    title TEXT NOT NULL,
-    summary TEXT NOT NULL,
-    content_md TEXT NOT NULL,
-    tags TEXT[] NOT NULL DEFAULT '{}',
-    timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
-    status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'published')),
-    scheduled_at TIMESTAMPTZ NULL,
-    published_at TIMESTAMPTZ NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )
-`);
-await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS posts_slug_lower_uidx ON posts (lower(slug))`);
-await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
-await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Madrid'`);
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS events (
-    id BIGSERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    date_confirmed BOOLEAN NOT NULL DEFAULT TRUE,
-    event_date DATE NOT NULL,
-    event_time TIME NOT NULL,
-    venue TEXT NOT NULL,
-    ticketing_url TEXT NOT NULL,
-    event_url TEXT NOT NULL,
-    timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )
-`);
-await pool.query(`CREATE INDEX IF NOT EXISTS events_date_time_idx ON events (event_date, event_time)`);
-await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS date_confirmed BOOLEAN NOT NULL DEFAULT TRUE`);
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS books (
-    id BIGSERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    book_url TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )
-`);
-await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_title_lower_uidx ON books (lower(title))`);
-await pool.query(`CREATE INDEX IF NOT EXISTS books_created_at_idx ON books (created_at DESC)`);
+  await pool.query(`ALTER TABLE product_leaders DROP CONSTRAINT IF EXISTS product_leaders_profile_url_key`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS posts (
+      id BIGSERIAL PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE,
+      markdown_path TEXT NOT NULL DEFAULT '',
+      title TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      content_md TEXT NOT NULL,
+      tags TEXT[] NOT NULL DEFAULT '{}',
+      timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
+      status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'published')),
+      scheduled_at TIMESTAMPTZ NULL,
+      published_at TIMESTAMPTZ NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS posts_slug_lower_uidx ON posts (lower(slug))`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Madrid'`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS events (
+      id BIGSERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      date_confirmed BOOLEAN NOT NULL DEFAULT TRUE,
+      event_date DATE NOT NULL,
+      event_time TIME NOT NULL,
+      venue TEXT NOT NULL,
+      ticketing_url TEXT NOT NULL,
+      event_url TEXT NOT NULL,
+      timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS events_date_time_idx ON events (event_date, event_time)`);
+  await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS date_confirmed BOOLEAN NOT NULL DEFAULT TRUE`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS books (
+      id BIGSERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      book_url TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_title_lower_uidx ON books (lower(title))`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS books_created_at_idx ON books (created_at DESC)`);
+}
 
 const booksCacheTtlMs = Math.max(1000, Number(process.env.BOOKS_CACHE_TTL_MS || 60000));
 const booksEdgeCacheSeconds = Math.max(0, Number(process.env.BOOKS_EDGE_CACHE_SECONDS || 120));
@@ -220,6 +225,8 @@ const server = http.createServer(async (req, res) => {
     send(res, 200, {
       ok: true,
       service: "product-digest-backend",
+      dbReady,
+      dbInitError,
       endpoints: [
         "GET /healthz",
         "POST /api/subscribers",
@@ -248,7 +255,12 @@ const server = http.createServer(async (req, res) => {
     req.method === "GET" &&
     (parsed.pathname === "/healthz" || parsed.pathname === "/health" || parsed.pathname === "/api/healthz")
   ) {
-    send(res, 200, { ok: true });
+    send(res, 200, { ok: true, dbReady, dbInitError });
+    return;
+  }
+
+  if (parsed.pathname.startsWith("/api/") && !dbReady) {
+    send(res, 503, { error: "db_not_ready", dbInitError });
     return;
   }
 
@@ -1097,4 +1109,36 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(port, "0.0.0.0", () => {
   console.log(`Subscribe API listening on port ${port}`);
+});
+
+async function boot() {
+  try {
+    await initializeDatabase();
+    dbReady = true;
+    dbInitError = "";
+    console.log("Database initialized");
+  } catch (error) {
+    dbReady = false;
+    dbInitError = String(error instanceof Error ? error.message : error || "db_init_failed");
+    console.error("Database initialization failed:", error);
+  }
+
+  setInterval(async () => {
+    if (dbReady) return;
+    try {
+      await initializeDatabase();
+      dbReady = true;
+      dbInitError = "";
+      console.log("Database re-initialized");
+    } catch (error) {
+      dbInitError = String(error instanceof Error ? error.message : error || "db_init_failed");
+      console.error("Database retry failed:", error);
+    }
+  }, 30000);
+}
+
+boot().catch((error) => {
+  dbReady = false;
+  dbInitError = String(error instanceof Error ? error.message : error || "db_init_failed");
+  console.error("Boot failed:", error);
 });
