@@ -88,17 +88,6 @@ await pool.query(`
 `);
 await pool.query(`CREATE INDEX IF NOT EXISTS events_date_time_idx ON events (event_date, event_time)`);
 await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS date_confirmed BOOLEAN NOT NULL DEFAULT TRUE`);
-await pool.query(`
-  CREATE TABLE IF NOT EXISTS books (
-    id BIGSERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    book_url TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )
-`);
-await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_title_lower_uidx ON books (lower(title))`);
 
 function send(res, status, payload) {
   res.writeHead(status, {
@@ -203,10 +192,6 @@ const server = http.createServer(async (req, res) => {
         "POST /api/events",
         "PATCH /api/events/:id",
         "DELETE /api/events/:id",
-        "GET /api/books",
-        "POST /api/books",
-        "PATCH /api/books/:id",
-        "DELETE /api/books/:id",
         "GET /api/scheduled-posts",
         "POST /api/scheduled-posts"
       ]
@@ -276,63 +261,6 @@ const server = http.createServer(async (req, res) => {
 
       const result = await pool.query(sql, values);
       send(res, 200, { events: result.rows });
-      return;
-    } catch {
-      send(res, 500, { error: "db_error" });
-      return;
-    }
-  }
-
-  if (req.method === "GET" && parsed.pathname === "/api/books") {
-    try {
-      const limit = Math.min(100, Math.max(1, Number(parsed.searchParams.get("limit") || 50)));
-      const offset = Math.max(0, Number(parsed.searchParams.get("offset") || 0));
-      const result = await pool.query(
-        `SELECT id, title, description, book_url, created_at, updated_at
-         FROM books
-         ORDER BY created_at DESC
-         LIMIT $1 OFFSET $2`,
-        [limit, offset]
-      );
-      send(res, 200, { books: result.rows });
-      return;
-    } catch {
-      send(res, 500, { error: "db_error" });
-      return;
-    }
-  }
-
-  if (req.method === "POST" && parsed.pathname === "/api/books") {
-    try {
-      const body = await readBody(req);
-      const payload = JSON.parse(body || "{}");
-
-      const title = String(payload.title || "").trim();
-      const description = String(payload.description || "").trim();
-      const url = String(payload.url || payload.book_url || "").trim();
-
-      if (!title || !description || !url) {
-        send(res, 400, { error: "missing_fields" });
-        return;
-      }
-      if (!isValidHttpUrl(url)) {
-        send(res, 400, { error: "invalid_url" });
-        return;
-      }
-
-      const result = await pool.query(
-        `INSERT INTO books (title, description, book_url, updated_at)
-         VALUES ($1, $2, $3, NOW())
-         ON CONFLICT (lower(title))
-         DO UPDATE SET
-           description = EXCLUDED.description,
-           book_url = EXCLUDED.book_url,
-           updated_at = NOW()
-         RETURNING id, title, description, book_url, created_at, updated_at`,
-        [title, description, url]
-      );
-
-      send(res, 201, { ok: true, book: result.rows[0] });
       return;
     } catch {
       send(res, 500, { error: "db_error" });
@@ -541,103 +469,8 @@ const server = http.createServer(async (req, res) => {
   }
 
   const pathParts = parsePathParams(parsed.pathname);
-  const isBookDetail = pathParts.length === 3 && pathParts[0] === "api" && pathParts[1] === "books";
-  const bookIdFromPath = isBookDetail ? Number(pathParts[2]) : NaN;
   const isEventDetail = pathParts.length === 3 && pathParts[0] === "api" && pathParts[1] === "events";
   const eventIdFromPath = isEventDetail ? Number(pathParts[2]) : NaN;
-
-  if (req.method === "PATCH" && isBookDetail) {
-    try {
-      const body = await readBody(req);
-      const payload = JSON.parse(body || "{}");
-
-      if (!Number.isInteger(bookIdFromPath) || bookIdFromPath <= 0) {
-        send(res, 400, { error: "invalid_book_id" });
-        return;
-      }
-
-      const title = payload.title === undefined ? undefined : String(payload.title).trim();
-      const description = payload.description === undefined ? undefined : String(payload.description).trim();
-      const url = payload.url === undefined && payload.book_url === undefined ? undefined : String(payload.url || payload.book_url || "").trim();
-
-      if (title !== undefined && !title) {
-        send(res, 400, { error: "invalid_title" });
-        return;
-      }
-      if (description !== undefined && !description) {
-        send(res, 400, { error: "invalid_description" });
-        return;
-      }
-      if (url !== undefined && !isValidHttpUrl(url)) {
-        send(res, 400, { error: "invalid_url" });
-        return;
-      }
-
-      const updates = [];
-      const values = [];
-      let index = 1;
-
-      if (title !== undefined) {
-        updates.push(`title = $${index++}`);
-        values.push(title);
-      }
-      if (description !== undefined) {
-        updates.push(`description = $${index++}`);
-        values.push(description);
-      }
-      if (url !== undefined) {
-        updates.push(`book_url = $${index++}`);
-        values.push(url);
-      }
-
-      if (updates.length === 0) {
-        send(res, 400, { error: "no_fields_to_update" });
-        return;
-      }
-
-      updates.push("updated_at = NOW()");
-      values.push(bookIdFromPath);
-
-      const result = await pool.query(
-        `UPDATE books
-         SET ${updates.join(", ")}
-         WHERE id = $${index}
-         RETURNING id, title, description, book_url, created_at, updated_at`,
-        values
-      );
-
-      if (result.rowCount === 0) {
-        send(res, 404, { error: "not_found" });
-        return;
-      }
-
-      send(res, 200, { ok: true, book: result.rows[0] });
-      return;
-    } catch {
-      send(res, 500, { error: "db_error" });
-      return;
-    }
-  }
-
-  if (req.method === "DELETE" && isBookDetail) {
-    try {
-      if (!Number.isInteger(bookIdFromPath) || bookIdFromPath <= 0) {
-        send(res, 400, { error: "invalid_book_id" });
-        return;
-      }
-
-      const result = await pool.query("DELETE FROM books WHERE id = $1 RETURNING id", [bookIdFromPath]);
-      if (result.rowCount === 0) {
-        send(res, 404, { error: "not_found" });
-        return;
-      }
-      send(res, 200, { ok: true, deletedId: bookIdFromPath });
-      return;
-    } catch {
-      send(res, 500, { error: "db_error" });
-      return;
-    }
-  }
 
   if (req.method === "PATCH" && isEventDetail) {
     try {

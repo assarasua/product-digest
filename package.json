@@ -30,7 +30,6 @@
     "backend:start": "node backend/subscribe-server.mjs",
     "new:post": "node scripts/new-post.mjs",
     "new:post:db": "node scripts/new-post-db.mjs",
-    "new:book:db": "node scripts/new-book-db.mjs",
     "new:event:db": "node scripts/new-event-db.mjs",
     "seed:events:db": "node scripts/seed-events-db.mjs",
     "publish:next-draft": "node scripts/publish-next-draft.mjs",

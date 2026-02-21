@@ -101,7 +101,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <div className="nav-links">
                   <Link href="/product-leaders-wiki">Product Leaders</Link>
                   <Link href="/eventos">Eventos</Link>
-                  <Link href="/libros">Libros</Link>
                   <Link href="/tags">Temas</Link>
                   <Link href="/archive">Archivo</Link>
                   <Link href="/search">Buscar</Link>
