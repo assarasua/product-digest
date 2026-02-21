@@ -62,11 +62,9 @@ function mapEvent(raw: RawEvent): Event {
 export async function getPublicEventsFromApi(limit = 50, offset = 0): Promise<Event[]> {
   try {
     const apiBase = getApiBaseUrl();
-    const response = await fetchWithTimeout(
-      `${apiBase}/api/events?public=true&limit=${limit}&offset=${offset}`,
-      { next: { revalidate: 300 } },
-      5000
-    );
+    const response = await fetch(`${apiBase}/api/events?public=true&limit=${limit}&offset=${offset}`, {
+      next: { revalidate: 300 }
+    });
 
     if (!response.ok) return [];
     const payload = (await response.json()) as { events?: RawEvent[] };
@@ -76,4 +74,3 @@ export async function getPublicEventsFromApi(limit = 50, offset = 0): Promise<Ev
     return [];
   }
 }
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";

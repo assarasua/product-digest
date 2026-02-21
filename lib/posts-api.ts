@@ -143,7 +143,7 @@ function postFromRaw(raw: {
 
 async function fetchPublishedPosts(): Promise<Post[]> {
   const url = `${getPostsApiBaseUrl()}/api/posts?status=published&limit=1000`;
-  const response = await fetchWithTimeout(url, { next: { revalidate: 60 } }, 5000);
+  const response = await fetch(url, { next: { revalidate: 60 } });
   if (!response.ok) {
     return [];
   }
@@ -195,4 +195,3 @@ export async function getArchiveFromApi(): Promise<Array<{ month: string; posts:
   }
   return [...archive.entries()].map(([month, groupedPosts]) => ({ month, posts: groupedPosts }));
 }
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
