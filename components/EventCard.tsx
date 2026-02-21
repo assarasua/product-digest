@@ -3,6 +3,7 @@ import { formatDate } from "@/lib/format";
 
 export function EventCard({ event }: { event: Event }) {
   const dateLabel = event.dateConfirmed ? formatDate(event.date) : "TBD";
+  const hasTicketingUrl = Boolean(event.ticketingUrl?.trim());
 
   return (
     <article className="event-card">
@@ -18,14 +19,16 @@ export function EventCard({ event }: { event: Event }) {
         <a className="event-link event-link-official" href={event.url} target="_blank" rel="noopener noreferrer">
           Web oficial
         </a>
-        <a
-          className="event-link event-link-ticketing"
-          href={event.ticketingUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Entradas
-        </a>
+        {hasTicketingUrl ? (
+          <a
+            className="event-link event-link-ticketing"
+            href={event.ticketingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Entradas
+          </a>
+        ) : null}
       </div>
     </article>
   );
