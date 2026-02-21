@@ -344,6 +344,45 @@ h3 {
   margin-top: 1.3rem;
 }
 
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.event-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--paper), white 28%);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.05rem;
+}
+
+.event-card h2 {
+  margin: 0.3rem 0 0.45rem;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.event-venue {
+  margin-top: 0.55rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.event-links {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 0.7rem;
+}
+
+.event-links a {
+  font-size: 0.9rem;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .leader-card {
   display: grid;
   grid-template-columns: 108px 1fr;

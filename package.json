@@ -30,6 +30,8 @@
     "backend:start": "node backend/subscribe-server.mjs",
     "new:post": "node scripts/new-post.mjs",
     "new:post:db": "node scripts/new-post-db.mjs",
+    "new:event:db": "node scripts/new-event-db.mjs",
+    "seed:events:db": "node scripts/seed-events-db.mjs",
     "publish:next-draft": "node scripts/publish-next-draft.mjs",
     "publish:next-draft:push": "node scripts/publish-next-draft-push.mjs",
     "schedule:sync": "node scripts/sync-scheduled-posts-from-content.mjs",

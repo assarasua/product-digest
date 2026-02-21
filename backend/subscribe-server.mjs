@@ -70,12 +70,30 @@ await pool.query(`
 await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS posts_slug_lower_uidx ON posts (lower(slug))`);
 await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
 await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Madrid'`);
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS events (
+    id BIGSERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    date_confirmed BOOLEAN NOT NULL DEFAULT TRUE,
+    event_date DATE NOT NULL,
+    event_time TIME NOT NULL,
+    venue TEXT NOT NULL,
+    ticketing_url TEXT NOT NULL,
+    event_url TEXT NOT NULL,
+    timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )
+`);
+await pool.query(`CREATE INDEX IF NOT EXISTS events_date_time_idx ON events (event_date, event_time)`);
+await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS date_confirmed BOOLEAN NOT NULL DEFAULT TRUE`);
 
 function send(res, status, payload) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, PATCH, OPTIONS, GET",
+    "Access-Control-Allow-Methods": "POST, PATCH, DELETE, OPTIONS, GET",
     "Access-Control-Allow-Headers": "Content-Type, Authorization"
   });
   res.end(JSON.stringify(payload));
@@ -91,6 +109,27 @@ function isValidSlug(value) {
 
 function isValidTimezone(value) {
   return /^[A-Za-z_]+\/[A-Za-z_]+(?:\/[A-Za-z_]+)?$/.test(value);
+}
+
+function isValidDate(value) {
+  if (typeof value !== "string") return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+function isValidTime(value) {
+  return typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(value);
+}
+
+function isValidHttpUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 function parsePathParams(pathname) {
@@ -129,7 +168,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, PATCH, OPTIONS, GET",
+      "Access-Control-Allow-Methods": "POST, PATCH, DELETE, OPTIONS, GET",
       "Access-Control-Allow-Headers": "Content-Type, Authorization"
     });
     res.end();
@@ -149,6 +188,10 @@ const server = http.createServer(async (req, res) => {
         "POST /api/posts/publish-due",
         "PATCH /api/posts/:slug/schedule",
         "POST /api/posts/:slug/publish",
+        "GET /api/events",
+        "POST /api/events",
+        "PATCH /api/events/:id",
+        "DELETE /api/events/:id",
         "GET /api/scheduled-posts",
         "POST /api/scheduled-posts"
       ]
@@ -191,6 +234,89 @@ const server = http.createServer(async (req, res) => {
          ORDER BY rank ASC`
       );
       send(res, 200, { leaders: result.rows });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "GET" && parsed.pathname === "/api/events") {
+    try {
+      const publicOnly = String(parsed.searchParams.get("public") || "true").toLowerCase() !== "false";
+      const limit = Math.min(100, Math.max(1, Number(parsed.searchParams.get("limit") || 20)));
+      const offset = Math.max(0, Number(parsed.searchParams.get("offset") || 0));
+
+      const values = [limit, offset];
+      let sql = `SELECT id, title, description, date_confirmed, event_date, event_time, venue, ticketing_url, event_url, timezone, created_at, updated_at
+                 FROM events`;
+
+      if (publicOnly) {
+        sql += ` WHERE date_confirmed = FALSE
+                 OR NOW() <= (((event_date::timestamp + event_time) AT TIME ZONE timezone) + INTERVAL '3 days')`;
+      }
+
+      sql += ` ORDER BY ((event_date::timestamp + event_time) AT TIME ZONE timezone) ASC
+               LIMIT $1 OFFSET $2`;
+
+      const result = await pool.query(sql, values);
+      send(res, 200, { events: result.rows });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "POST" && parsed.pathname === "/api/events") {
+    try {
+      const body = await readBody(req);
+      const payload = JSON.parse(body || "{}");
+
+      const title = String(payload.title || "").trim();
+      const description = String(payload.description || "").trim();
+      const dateConfirmedRaw = payload.dateConfirmed ?? payload.date_confirmed;
+      const dateConfirmed = dateConfirmedRaw === undefined ? true : Boolean(dateConfirmedRaw);
+      const date = String(payload.date || "").trim();
+      const time = String(payload.time || "").trim();
+      const venue = String(payload.venue || "").trim();
+      const ticketingUrl = String(payload.ticketingUrl || payload.ticketing_url || "").trim();
+      const url = String(payload.url || payload.event_url || "").trim();
+      const timezone = String(payload.timezone || "Europe/Madrid").trim();
+
+      if (!title || !description || !venue) {
+        send(res, 400, { error: "missing_fields" });
+        return;
+      }
+      if (!isValidDate(date)) {
+        send(res, 400, { error: "invalid_date" });
+        return;
+      }
+      if (!isValidTime(time)) {
+        send(res, 400, { error: "invalid_time" });
+        return;
+      }
+      if (!isValidHttpUrl(ticketingUrl)) {
+        send(res, 400, { error: "invalid_ticketing_url" });
+        return;
+      }
+      if (!isValidHttpUrl(url)) {
+        send(res, 400, { error: "invalid_url" });
+        return;
+      }
+      if (!isValidTimezone(timezone)) {
+        send(res, 400, { error: "invalid_timezone" });
+        return;
+      }
+
+      const result = await pool.query(
+        `INSERT INTO events (title, description, date_confirmed, event_date, event_time, venue, ticketing_url, event_url, timezone, updated_at)
+         VALUES ($1, $2, $3, $4::date, $5::time, $6, $7, $8, $9, NOW())
+         RETURNING id, title, description, date_confirmed, event_date, event_time, venue, ticketing_url, event_url, timezone, created_at, updated_at`,
+        [title, description, dateConfirmed, date, time, venue, ticketingUrl, url, timezone]
+      );
+
+      send(res, 201, { ok: true, event: result.rows[0] });
       return;
     } catch {
       send(res, 500, { error: "db_error" });
@@ -343,6 +469,161 @@ const server = http.createServer(async (req, res) => {
   }
 
   const pathParts = parsePathParams(parsed.pathname);
+  const isEventDetail = pathParts.length === 3 && pathParts[0] === "api" && pathParts[1] === "events";
+  const eventIdFromPath = isEventDetail ? Number(pathParts[2]) : NaN;
+
+  if (req.method === "PATCH" && isEventDetail) {
+    try {
+      const body = await readBody(req);
+      const payload = JSON.parse(body || "{}");
+
+      if (!Number.isInteger(eventIdFromPath) || eventIdFromPath <= 0) {
+        send(res, 400, { error: "invalid_event_id" });
+        return;
+      }
+
+      const title = payload.title === undefined ? undefined : String(payload.title).trim();
+      const description = payload.description === undefined ? undefined : String(payload.description).trim();
+      const dateConfirmed =
+        payload.dateConfirmed === undefined && payload.date_confirmed === undefined
+          ? undefined
+          : Boolean(payload.dateConfirmed ?? payload.date_confirmed);
+      const date = payload.date === undefined ? undefined : String(payload.date).trim();
+      const time = payload.time === undefined ? undefined : String(payload.time).trim();
+      const venue = payload.venue === undefined ? undefined : String(payload.venue).trim();
+      const ticketingUrl =
+        payload.ticketingUrl === undefined && payload.ticketing_url === undefined
+          ? undefined
+          : String(payload.ticketingUrl || payload.ticketing_url || "").trim();
+      const url =
+        payload.url === undefined && payload.event_url === undefined
+          ? undefined
+          : String(payload.url || payload.event_url || "").trim();
+      const timezone = payload.timezone === undefined ? undefined : String(payload.timezone).trim();
+
+      if (title !== undefined && !title) {
+        send(res, 400, { error: "invalid_title" });
+        return;
+      }
+      if (description !== undefined && !description) {
+        send(res, 400, { error: "invalid_description" });
+        return;
+      }
+      if (venue !== undefined && !venue) {
+        send(res, 400, { error: "invalid_venue" });
+        return;
+      }
+      if (date !== undefined && !isValidDate(date)) {
+        send(res, 400, { error: "invalid_date" });
+        return;
+      }
+      if (time !== undefined && !isValidTime(time)) {
+        send(res, 400, { error: "invalid_time" });
+        return;
+      }
+      if (ticketingUrl !== undefined && !isValidHttpUrl(ticketingUrl)) {
+        send(res, 400, { error: "invalid_ticketing_url" });
+        return;
+      }
+      if (url !== undefined && !isValidHttpUrl(url)) {
+        send(res, 400, { error: "invalid_url" });
+        return;
+      }
+      if (timezone !== undefined && !isValidTimezone(timezone)) {
+        send(res, 400, { error: "invalid_timezone" });
+        return;
+      }
+
+      const updates = [];
+      const values = [];
+      let index = 1;
+
+      if (title !== undefined) {
+        updates.push(`title = $${index++}`);
+        values.push(title);
+      }
+      if (description !== undefined) {
+        updates.push(`description = $${index++}`);
+        values.push(description);
+      }
+      if (dateConfirmed !== undefined) {
+        updates.push(`date_confirmed = $${index++}`);
+        values.push(dateConfirmed);
+      }
+      if (date !== undefined) {
+        updates.push(`event_date = $${index++}::date`);
+        values.push(date);
+      }
+      if (time !== undefined) {
+        updates.push(`event_time = $${index++}::time`);
+        values.push(time);
+      }
+      if (venue !== undefined) {
+        updates.push(`venue = $${index++}`);
+        values.push(venue);
+      }
+      if (ticketingUrl !== undefined) {
+        updates.push(`ticketing_url = $${index++}`);
+        values.push(ticketingUrl);
+      }
+      if (url !== undefined) {
+        updates.push(`event_url = $${index++}`);
+        values.push(url);
+      }
+      if (timezone !== undefined) {
+        updates.push(`timezone = $${index++}`);
+        values.push(timezone);
+      }
+
+      if (updates.length === 0) {
+        send(res, 400, { error: "no_fields_to_update" });
+        return;
+      }
+
+      updates.push("updated_at = NOW()");
+      values.push(eventIdFromPath);
+
+      const result = await pool.query(
+        `UPDATE events
+         SET ${updates.join(", ")}
+         WHERE id = $${index}
+         RETURNING id, title, description, date_confirmed, event_date, event_time, venue, ticketing_url, event_url, timezone, created_at, updated_at`,
+        values
+      );
+
+      if (result.rowCount === 0) {
+        send(res, 404, { error: "not_found" });
+        return;
+      }
+
+      send(res, 200, { ok: true, event: result.rows[0] });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "DELETE" && isEventDetail) {
+    try {
+      if (!Number.isInteger(eventIdFromPath) || eventIdFromPath <= 0) {
+        send(res, 400, { error: "invalid_event_id" });
+        return;
+      }
+
+      const result = await pool.query("DELETE FROM events WHERE id = $1 RETURNING id", [eventIdFromPath]);
+      if (result.rowCount === 0) {
+        send(res, 404, { error: "not_found" });
+        return;
+      }
+      send(res, 200, { ok: true, deletedId: eventIdFromPath });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
   const isPostDetail = pathParts.length >= 3 && pathParts[0] === "api" && pathParts[1] === "posts";
   const slugFromPath = isPostDetail ? decodeURIComponent(pathParts[2] || "").toLowerCase() : "";
 
