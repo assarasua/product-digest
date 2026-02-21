@@ -417,6 +417,62 @@ h3 {
   border-color: #f0c47a;
 }
 
+.books-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.book-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--paper), white 28%);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.05rem;
+}
+
+.book-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.book-card h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1.22rem;
+  line-height: 1.25;
+}
+
+.book-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.55rem;
+  min-width: 130px;
+}
+
+.book-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #8bc9a0;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #0f4f2f;
+  background: #d9f1e3;
+}
+
+.book-link:hover {
+  filter: brightness(0.96);
+}
+
 .leader-card {
   display: grid;
   grid-template-columns: 108px 1fr;
@@ -782,6 +838,18 @@ h3 {
   }
 
   .event-actions {
+    width: 100%;
+    min-width: 0;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .book-card {
+    flex-direction: column;
+  }
+
+  .book-actions {
     width: 100%;
     min-width: 0;
     flex-direction: row;
