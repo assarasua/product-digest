@@ -9,7 +9,7 @@ export function BookCard({ book }: { book: Book }) {
       </div>
       <div className="book-actions">
         <a className="book-link" href={book.url} target="_blank" rel="noopener noreferrer">
-          Ver libro
+          Comprar
         </a>
       </div>
     </article>
