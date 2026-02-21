@@ -4,7 +4,7 @@ import { TagPill } from "@/components/TagPill";
 import { getAllTagsFromApi } from "@/lib/posts-api";
 import { ogImageUrl } from "@/lib/seo";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Temas",
