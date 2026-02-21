@@ -14,7 +14,8 @@ const pool = new pg.Pool({
   connectionString: databaseUrl,
   ssl: { rejectUnauthorized: false },
   connectionTimeoutMillis: Number(process.env.DB_CONNECT_TIMEOUT_MS || 15000),
-  idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT_MS || 10000)
+  idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT_MS || 10000),
+  query_timeout: Number(process.env.DB_QUERY_TIMEOUT_MS || 6000)
 });
 
 await pool.query(`
@@ -99,6 +100,32 @@ await pool.query(`
   )
 `);
 await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_title_lower_uidx ON books (lower(title))`);
+await pool.query(`CREATE INDEX IF NOT EXISTS books_created_at_idx ON books (created_at DESC)`);
+
+const booksCacheTtlMs = Math.max(1000, Number(process.env.BOOKS_CACHE_TTL_MS || 60000));
+const booksCache = new Map();
+
+function buildBooksCacheKey(limit, offset) {
+  return `${limit}:${offset}`;
+}
+
+function getCachedBooks(key) {
+  const item = booksCache.get(key);
+  if (!item) return null;
+  if (Date.now() - item.cachedAt > booksCacheTtlMs) {
+    booksCache.delete(key);
+    return null;
+  }
+  return item.data;
+}
+
+function setCachedBooks(key, data) {
+  booksCache.set(key, { cachedAt: Date.now(), data });
+}
+
+function clearBooksCache() {
+  booksCache.clear();
+}
 
 function send(res, status, payload) {
   res.writeHead(status, {
@@ -343,6 +370,14 @@ const server = http.createServer(async (req, res) => {
     try {
       const limit = Math.min(100, Math.max(1, Number(parsed.searchParams.get("limit") || 50)));
       const offset = Math.max(0, Number(parsed.searchParams.get("offset") || 0));
+      const cacheKey = buildBooksCacheKey(limit, offset);
+      const cached = getCachedBooks(cacheKey);
+
+      if (cached) {
+        send(res, 200, { books: cached });
+        return;
+      }
+
       const result = await pool.query(
         `SELECT id, title, description, book_url, created_at, updated_at
          FROM books
@@ -350,6 +385,7 @@ const server = http.createServer(async (req, res) => {
          LIMIT $1 OFFSET $2`,
         [limit, offset]
       );
+      setCachedBooks(cacheKey, result.rows);
       send(res, 200, { books: result.rows });
       return;
     } catch {
@@ -388,6 +424,7 @@ const server = http.createServer(async (req, res) => {
         [title, description, url]
       );
 
+      clearBooksCache();
       send(res, 201, { ok: true, book: result.rows[0] });
       return;
     } catch {
@@ -614,6 +651,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      clearBooksCache();
       send(res, 200, { ok: true, book: result.rows[0] });
       return;
     } catch {
@@ -635,6 +673,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      clearBooksCache();
       send(res, 200, { ok: true, deletedId: bookIdFromPath });
       return;
     } catch {
