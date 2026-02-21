@@ -15,9 +15,12 @@ function readArg(flag, fallback = "") {
 const title = readArg("--title");
 const description = readArg("--description");
 const url = readArg("--url");
+const imageUrl = readArg("--imageUrl");
 
 if (!title || !description || !url) {
-  console.error("Usage: npm run new:book:db -- --title <title> --description <description> --url <url>");
+  console.error(
+    "Usage: npm run new:book:db -- --title <title> --description <description> --url <url> [--imageUrl <url>]"
+  );
   process.exit(1);
 }
 
@@ -34,22 +37,25 @@ await pool.query(`
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     book_url TEXT NOT NULL,
+    image_url TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )
 `);
+await pool.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT ''`);
 await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_title_lower_uidx ON books (lower(title))`);
 
 const result = await pool.query(
-  `INSERT INTO books (title, description, book_url, updated_at)
-   VALUES ($1, $2, $3, NOW())
+  `INSERT INTO books (title, description, book_url, image_url, updated_at)
+   VALUES ($1, $2, $3, $4, NOW())
    ON CONFLICT (lower(title))
    DO UPDATE SET
      description = EXCLUDED.description,
      book_url = EXCLUDED.book_url,
+     image_url = COALESCE(NULLIF(EXCLUDED.image_url, ''), books.image_url),
      updated_at = NOW()
-   RETURNING id, title, description, book_url, created_at, updated_at`,
-  [title, description, url]
+   RETURNING id, title, description, book_url, image_url, created_at, updated_at`,
+  [title, description, url, imageUrl]
 );
 
 await pool.end();

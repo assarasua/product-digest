@@ -99,10 +99,12 @@ async function initializeDatabase() {
       title TEXT NOT NULL,
       description TEXT NOT NULL,
       book_url TEXT NOT NULL,
+      image_url TEXT NOT NULL DEFAULT '',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+  await pool.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT ''`);
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_title_lower_uidx ON books (lower(title))`);
   await pool.query(`CREATE INDEX IF NOT EXISTS books_created_at_idx ON books (created_at DESC)`);
 }
@@ -402,7 +404,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       const result = await pool.query(
-        `SELECT id, title, description, book_url, created_at, updated_at
+        `SELECT id, title, description, book_url, image_url, created_at, updated_at
          FROM books
          ORDER BY created_at DESC
          LIMIT $1 OFFSET $2`,
@@ -433,6 +435,7 @@ const server = http.createServer(async (req, res) => {
       const title = String(payload.title || "").trim();
       const description = String(payload.description || "").trim();
       const url = String(payload.url || payload.book_url || "").trim();
+      const imageUrl = String(payload.imageUrl || payload.image_url || "").trim();
 
       if (!title || !description || !url) {
         send(res, 400, { error: "missing_fields" });
@@ -442,17 +445,22 @@ const server = http.createServer(async (req, res) => {
         send(res, 400, { error: "invalid_url" });
         return;
       }
+      if (imageUrl && !isValidHttpUrl(imageUrl)) {
+        send(res, 400, { error: "invalid_image_url" });
+        return;
+      }
 
       const result = await pool.query(
-        `INSERT INTO books (title, description, book_url, updated_at)
-         VALUES ($1, $2, $3, NOW())
+        `INSERT INTO books (title, description, book_url, image_url, updated_at)
+         VALUES ($1, $2, $3, $4, NOW())
          ON CONFLICT (lower(title))
          DO UPDATE SET
            description = EXCLUDED.description,
            book_url = EXCLUDED.book_url,
+           image_url = EXCLUDED.image_url,
            updated_at = NOW()
-         RETURNING id, title, description, book_url, created_at, updated_at`,
-        [title, description, url]
+         RETURNING id, title, description, book_url, image_url, created_at, updated_at`,
+        [title, description, url, imageUrl]
       );
 
       clearBooksCache();
@@ -630,6 +638,10 @@ const server = http.createServer(async (req, res) => {
         payload.url === undefined && payload.book_url === undefined
           ? undefined
           : String(payload.url || payload.book_url || "").trim();
+      const imageUrl =
+        payload.imageUrl === undefined && payload.image_url === undefined
+          ? undefined
+          : String(payload.imageUrl || payload.image_url || "").trim();
 
       if (title !== undefined && !title) {
         send(res, 400, { error: "invalid_title" });
@@ -641,6 +653,10 @@ const server = http.createServer(async (req, res) => {
       }
       if (url !== undefined && !isValidHttpUrl(url)) {
         send(res, 400, { error: "invalid_url" });
+        return;
+      }
+      if (imageUrl !== undefined && imageUrl && !isValidHttpUrl(imageUrl)) {
+        send(res, 400, { error: "invalid_image_url" });
         return;
       }
 
@@ -660,6 +676,10 @@ const server = http.createServer(async (req, res) => {
         updates.push(`book_url = $${index++}`);
         values.push(url);
       }
+      if (imageUrl !== undefined) {
+        updates.push(`image_url = $${index++}`);
+        values.push(imageUrl);
+      }
 
       if (updates.length === 0) {
         send(res, 400, { error: "no_fields_to_update" });
@@ -673,7 +693,7 @@ const server = http.createServer(async (req, res) => {
         `UPDATE books
          SET ${updates.join(", ")}
          WHERE id = $${index}
-         RETURNING id, title, description, book_url, created_at, updated_at`,
+         RETURNING id, title, description, book_url, image_url, created_at, updated_at`,
         values
       );
 
