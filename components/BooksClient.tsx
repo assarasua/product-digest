@@ -7,6 +7,7 @@ type Book = {
   title: string;
   description: string;
   book_url: string;
+  image_url?: string;
 };
 
 function getApiBaseUrl(): string {
@@ -64,6 +65,9 @@ export function BooksClient() {
     <section className="books-grid" aria-label="Libros recomendados">
       {books.map((book) => (
         <article key={book.id} className="book-card">
+          <div className="book-cover">
+            {book.image_url ? <img src={book.image_url} alt={`Portada de ${book.title}`} loading="lazy" /> : <span>Libro</span>}
+          </div>
           <div className="book-main">
             <h2>{book.title}</h2>
             <p className="summary">{book.description}</p>
