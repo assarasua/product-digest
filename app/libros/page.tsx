@@ -4,7 +4,7 @@ import { BookCard } from "@/components/BookCard";
 import { getBooksFromApi } from "@/lib/books-api";
 import { ogImageUrl } from "@/lib/seo";
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Libros",
