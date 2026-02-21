@@ -8,13 +8,15 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Eventos",
-  description: "Eventos recomendados de producto: agenda vigente, lugar y enlaces de registro.",
+  description:
+    "El lugar donde Product Managers, Product Leaders y Product Builders descubren los eventos clave para aprender, conectar y construir mejor producto.",
   alternates: {
     canonical: "/eventos"
   },
   openGraph: {
     title: "Eventos | Product Digest",
-    description: "Eventos recomendados de producto: agenda vigente, lugar y enlaces de registro.",
+    description:
+      "El lugar donde Product Managers, Product Leaders y Product Builders descubren los eventos clave para aprender, conectar y construir mejor producto.",
     url: "/eventos",
     type: "website",
     images: [{ url: ogImageUrl("Eventos", "Agenda vigente para la comunidad de producto") }]
@@ -22,7 +24,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Eventos | Product Digest",
-    description: "Eventos recomendados de producto: agenda vigente, lugar y enlaces de registro.",
+    description:
+      "El lugar donde Product Managers, Product Leaders y Product Builders descubren los eventos clave para aprender, conectar y construir mejor producto.",
     images: [ogImageUrl("Eventos", "Agenda vigente para la comunidad de producto")]
   }
 };
@@ -33,7 +36,10 @@ export default async function EventsPage() {
   return (
     <div className="page-wrap">
       <h1>Eventos</h1>
-      <p className="page-intro">Selección de eventos vigentes para profesionales de producto.</p>
+      <p className="page-intro">
+        El lugar donde Product Managers, Product Leaders y Product Builders acuden para descubrir
+        eventos clave, aprender de referentes y conectar con la comunidad global de producto.
+      </p>
 
       {events.length === 0 ? (
         <p className="summary">No hay eventos disponibles ahora.</p>
