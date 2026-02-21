@@ -1,9 +1,17 @@
 import type { Event } from "@/lib/events-api";
 import { formatDate } from "@/lib/format";
 
+function normalizeUrl(value: string | undefined): string {
+  return (value || "").trim().toLowerCase().replace(/\/+$/, "");
+}
+
 export function EventCard({ event }: { event: Event }) {
   const dateLabel = event.dateConfirmed ? formatDate(event.date) : "TBD";
-  const hasTicketingUrl = Boolean(event.ticketingUrl?.trim());
+  const ticketingUrl = (event.ticketingUrl || "").trim();
+  const officialUrl = (event.url || "").trim();
+  const hasTicketingUrl =
+    /^https?:\/\//i.test(ticketingUrl) &&
+    normalizeUrl(ticketingUrl) !== normalizeUrl(officialUrl);
 
   return (
     <article className="event-card">
@@ -22,7 +30,7 @@ export function EventCard({ event }: { event: Event }) {
         {hasTicketingUrl ? (
           <a
             className="event-link event-link-ticketing"
-            href={event.ticketingUrl}
+            href={ticketingUrl}
             target="_blank"
             rel="noopener noreferrer"
           >
