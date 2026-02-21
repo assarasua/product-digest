@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { resolveApiBaseUrl } from "@/lib/api-base-url";
 import { formatDate } from "@/lib/format";
 import type { SearchDocument } from "@/lib/search-index";
 
@@ -11,8 +12,10 @@ export function SearchClient() {
   const [docs, setDocs] = useState<SearchDocument[]>([]);
 
   useEffect(() => {
-    const apiBase =
-      process.env.NEXT_PUBLIC_POSTS_API_BASE_URL?.replace(/\/+$/, "") ?? "https://api.productdigest.es";
+    const apiBase = resolveApiBaseUrl(
+      process.env.NEXT_PUBLIC_POSTS_API_BASE_URL,
+      process.env.NEXT_PUBLIC_API_BASE_URL
+    );
     fetch(`${apiBase}/api/posts?status=published&limit=1000`)
       .then(async (res) => {
         if (!res.ok) {

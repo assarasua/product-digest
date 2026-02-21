@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { resolveApiBaseUrl } from "@/lib/api-base-url";
 
 type NewsletterSignupProps = {
   title?: string;
@@ -11,11 +12,10 @@ export function NewsletterSignup({
   title = "Únete a la familia Product Digest",
   description = "Déjanos tu email y te enviaremos ideas aplicables para construir mejor producto."
 }: NewsletterSignupProps) {
-  const apiBaseUrl = (
-    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    "https://api.productdigest.es"
-  ).replace(/\/+$/, "");
+  const apiBaseUrl = resolveApiBaseUrl(
+    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL,
+    process.env.NEXT_PUBLIC_API_BASE_URL
+  );
   const subscribeUrl = `${apiBaseUrl}/api/subscribers`;
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "duplicate">("idle");

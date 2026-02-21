@@ -1,3 +1,6 @@
+import { resolveApiBaseUrl } from "@/lib/api-base-url";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+
 export type Heading = {
   id: string;
   level: 2 | 3;
@@ -101,11 +104,11 @@ function normalizeStringArray(value: unknown): string[] {
 }
 
 function getPostsApiBaseUrl(): string {
-  return (
-    process.env.POSTS_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL ||
-    "https://api.productdigest.es"
-  ).replace(/\/+$/, "");
+  return resolveApiBaseUrl(
+    process.env.POSTS_API_BASE_URL,
+    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL,
+    process.env.NEXT_PUBLIC_API_BASE_URL
+  );
 }
 
 function postFromRaw(raw: {
@@ -195,4 +198,3 @@ export async function getArchiveFromApi(): Promise<Array<{ month: string; posts:
   }
   return [...archive.entries()].map(([month, groupedPosts]) => ({ month, posts: groupedPosts }));
 }
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";

@@ -4,6 +4,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
 import { z } from "zod";
+import { resolveApiBaseUrl } from "@/lib/api-base-url";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 const postsDir = path.join(process.cwd(), "content/posts");
@@ -167,11 +168,11 @@ function postFromRaw(raw: {
 }
 
 function getPostsApiBaseUrl(): string {
-  return (
-    process.env.POSTS_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL ||
-    "https://api.productdigest.es"
-  ).replace(/\/+$/, "");
+  return resolveApiBaseUrl(
+    process.env.POSTS_API_BASE_URL,
+    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL,
+    process.env.NEXT_PUBLIC_API_BASE_URL
+  );
 }
 
 export async function getRemotePublishedPosts(): Promise<Post[]> {

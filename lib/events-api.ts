@@ -1,3 +1,6 @@
+import { resolveApiBaseUrl } from "@/lib/api-base-url";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+
 export type Event = {
   id: number;
   title: string;
@@ -29,12 +32,11 @@ type RawEvent = {
 };
 
 function getApiBaseUrl(): string {
-  return (
-    process.env.POSTS_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    "https://api.productdigest.es"
-  ).replace(/\/+$/, "");
+  return resolveApiBaseUrl(
+    process.env.POSTS_API_BASE_URL,
+    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL,
+    process.env.NEXT_PUBLIC_API_BASE_URL
+  );
 }
 
 function normalizeTime(value: string): string {
@@ -76,4 +78,3 @@ export async function getPublicEventsFromApi(limit = 50, offset = 0): Promise<Ev
     return [];
   }
 }
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";

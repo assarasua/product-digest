@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ogImageUrl } from "@/lib/seo";
+import { resolveApiBaseUrl } from "@/lib/api-base-url";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 export const metadata: Metadata = {
@@ -40,10 +41,13 @@ type ProductLeader = {
 };
 
 async function getLeaders(): Promise<ProductLeader[]> {
-  const apiBase =
-    process.env.PRODUCT_LEADERS_API_BASE_URL ??
-    process.env.NEXT_PUBLIC_PRODUCT_LEADERS_API_BASE_URL ??
-    "https://api.productdigest.es";
+  const apiBase = resolveApiBaseUrl(
+    process.env.PRODUCT_LEADERS_API_BASE_URL,
+    process.env.NEXT_PUBLIC_PRODUCT_LEADERS_API_BASE_URL,
+    process.env.POSTS_API_BASE_URL,
+    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL,
+    process.env.NEXT_PUBLIC_API_BASE_URL
+  );
 
   try {
     const response = await fetchWithTimeout(`${apiBase}/api/product-leaders`, { next: { revalidate: 3600 } }, 5000);

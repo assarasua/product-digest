@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { resolveApiBaseUrl } from "@/lib/api-base-url";
 
-const apiBaseUrl = (
-  process.env.NEXT_PUBLIC_POSTS_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://api.productdigest.es"
-).replace(/\/+$/, "");
+const apiBaseUrl = resolveApiBaseUrl(
+  process.env.NEXT_PUBLIC_POSTS_API_BASE_URL,
+  process.env.NEXT_PUBLIC_API_BASE_URL
+);
 
 type LikeButtonProps = {
   slug: string;

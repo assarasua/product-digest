@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { resolveApiBaseUrl } from "@/lib/api-base-url";
 
 type Book = {
   id: number;
@@ -11,11 +12,10 @@ type Book = {
 };
 
 function getApiBaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL ||
-    "https://api.productdigest.es"
-  ).replace(/\/+$/, "");
+  return resolveApiBaseUrl(
+    process.env.NEXT_PUBLIC_API_BASE_URL,
+    process.env.NEXT_PUBLIC_POSTS_API_BASE_URL
+  );
 }
 
 export function BooksClient() {
