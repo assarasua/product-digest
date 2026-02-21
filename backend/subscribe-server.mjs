@@ -103,6 +103,8 @@ await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_title_lower_uidx ON bo
 await pool.query(`CREATE INDEX IF NOT EXISTS books_created_at_idx ON books (created_at DESC)`);
 
 const booksCacheTtlMs = Math.max(1000, Number(process.env.BOOKS_CACHE_TTL_MS || 60000));
+const booksEdgeCacheSeconds = Math.max(0, Number(process.env.BOOKS_EDGE_CACHE_SECONDS || 120));
+const booksEdgeStaleSeconds = Math.max(0, Number(process.env.BOOKS_EDGE_STALE_SECONDS || 600));
 const booksCache = new Map();
 
 function buildBooksCacheKey(limit, offset) {
@@ -127,12 +129,13 @@ function clearBooksCache() {
   booksCache.clear();
 }
 
-function send(res, status, payload) {
+function send(res, status, payload, extraHeaders = {}) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, PATCH, DELETE, OPTIONS, GET",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    ...extraHeaders
   });
   res.end(JSON.stringify(payload));
 }
@@ -374,7 +377,15 @@ const server = http.createServer(async (req, res) => {
       const cached = getCachedBooks(cacheKey);
 
       if (cached) {
-        send(res, 200, { books: cached });
+        send(
+          res,
+          200,
+          { books: cached },
+          {
+            "Cache-Control": `public, max-age=0, s-maxage=${booksEdgeCacheSeconds}, stale-while-revalidate=${booksEdgeStaleSeconds}`,
+            "CDN-Cache-Control": `public, s-maxage=${booksEdgeCacheSeconds}, stale-while-revalidate=${booksEdgeStaleSeconds}`
+          }
+        );
         return;
       }
 
@@ -386,7 +397,15 @@ const server = http.createServer(async (req, res) => {
         [limit, offset]
       );
       setCachedBooks(cacheKey, result.rows);
-      send(res, 200, { books: result.rows });
+      send(
+        res,
+        200,
+        { books: result.rows },
+        {
+          "Cache-Control": `public, max-age=0, s-maxage=${booksEdgeCacheSeconds}, stale-while-revalidate=${booksEdgeStaleSeconds}`,
+          "CDN-Cache-Control": `public, s-maxage=${booksEdgeCacheSeconds}, stale-while-revalidate=${booksEdgeStaleSeconds}`
+        }
+      );
       return;
     } catch {
       send(res, 500, { error: "db_error" });
