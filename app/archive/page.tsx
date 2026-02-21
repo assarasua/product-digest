@@ -5,7 +5,7 @@ import { getArchiveFromApi } from "@/lib/posts-api";
 import { formatDate, formatMonth } from "@/lib/format";
 import { ogImageUrl } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Archivo",
