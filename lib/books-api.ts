@@ -39,9 +39,11 @@ function mapBook(raw: RawBook): Book {
 export async function getBooksFromApi(limit = 100, offset = 0): Promise<Book[]> {
   try {
     const apiBase = getApiBaseUrl();
-    const response = await fetch(`${apiBase}/api/books?limit=${limit}&offset=${offset}`, {
-      next: { revalidate: 600 }
-    });
+    const response = await fetchWithTimeout(
+      `${apiBase}/api/books?limit=${limit}&offset=${offset}`,
+      { next: { revalidate: 600 } },
+      5000
+    );
 
     if (!response.ok) return [];
     const payload = (await response.json()) as { books?: RawBook[] };
@@ -51,3 +53,4 @@ export async function getBooksFromApi(limit = 100, offset = 0): Promise<Book[]> 
     return [];
   }
 }
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
