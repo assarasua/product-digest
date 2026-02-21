@@ -33,10 +33,7 @@ export default async function EventsPage() {
   return (
     <div className="page-wrap">
       <h1>Eventos</h1>
-      <p className="page-intro">
-        Selección de eventos vigentes para profesionales de producto. Cada evento permanece publicado hasta 3 días
-        después de su fecha y hora clave.
-      </p>
+      <p className="page-intro">Selección de eventos vigentes para profesionales de producto.</p>
 
       {events.length === 0 ? (
         <p className="summary">No hay eventos disponibles ahora.</p>

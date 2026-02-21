@@ -104,7 +104,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <Link href="/tags">Temas</Link>
                   <Link href="/archive">Archivo</Link>
                   <Link href="/search">Buscar</Link>
-                  <Link href="/about">Acerca de Product Digest</Link>
+                  <Link href="/about">Acerca de</Link>
                 </div>
               </nav>
             </header>
