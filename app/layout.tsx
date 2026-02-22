@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { NavigationTracker } from "@/components/NavigationTracker";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { CookieBanner } from "@/components/CookieBanner";
 import { ogImageUrl } from "@/lib/seo";
 import { Providers } from "./providers";
 import "../styles/globals.css";
@@ -106,6 +107,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <Link href="/archive">Archivo</Link>
                   <Link href="/search">Buscar</Link>
                   <Link href="/about">Acerca de</Link>
+                  <Link href="/cookies">Cookies</Link>
                 </div>
               </nav>
             </header>
@@ -114,6 +116,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <NewsletterSignup />
             </div>
           </div>
+          <CookieBanner />
         </Providers>
       </body>
     </html>
