@@ -28,6 +28,7 @@ export function BooksClient() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [selectedLabel, setSelectedLabel] = useState("all");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -60,15 +61,25 @@ export function BooksClient() {
     };
   }, []);
 
+  const availableLabels = useMemo(() => {
+    const labels = Array.from(new Set(books.map((book) => getBookSectionLabel(book))));
+    return labels.sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+  }, [books]);
+
   const filteredBooks = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return books;
-
     return books.filter((book) => {
+      const bookLabel = getBookSectionLabel(book);
+      if (selectedLabel !== "all" && bookLabel !== selectedLabel) {
+        return false;
+      }
+      if (!normalizedQuery) {
+        return true;
+      }
       const haystack = `${book.title} ${book.label ?? ""} ${book.description}`.toLowerCase();
       return haystack.includes(normalizedQuery);
     });
-  }, [books, query]);
+  }, [books, query, selectedLabel]);
 
   const groupedBooks = useMemo(() => {
     const groups = new Map<string, Book[]>();
@@ -97,16 +108,38 @@ export function BooksClient() {
   return (
     <>
       <section className="books-search-wrap" aria-label="Buscar libros">
-        <label htmlFor="books-search-input" className="search-label">
-          Buscar libros
-        </label>
-        <input
-          id="books-search-input"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Ej: liderazgo, estrategia, discovery..."
-          className="search-input books-search-input"
-        />
+        <div className="books-controls">
+          <div>
+            <label htmlFor="books-search-input" className="search-label">
+              Buscar libros
+            </label>
+            <input
+              id="books-search-input"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Ej: liderazgo, estrategia, discovery..."
+              className="search-input books-search-input"
+            />
+          </div>
+          <div>
+            <label htmlFor="books-label-select" className="search-label">
+              Filtrar por sección
+            </label>
+            <select
+              id="books-label-select"
+              value={selectedLabel}
+              onChange={(event) => setSelectedLabel(event.target.value)}
+              className="search-input books-filter-select"
+            >
+              <option value="all">Todas</option>
+              {availableLabels.map((label) => (
+                <option key={label} value={label}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         <p className="search-meta">{filteredBooks.length} resultado(s)</p>
       </section>
 

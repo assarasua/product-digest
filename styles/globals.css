@@ -428,8 +428,23 @@ h3 {
   margin-top: 1rem;
 }
 
+.books-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: end;
+}
+
+.books-controls > div {
+  min-width: min(280px, 100%);
+}
+
 .books-search-input {
   max-width: 560px;
+}
+
+.books-filter-select {
+  min-width: 220px;
 }
 
 .books-groups {
