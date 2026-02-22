@@ -115,7 +115,7 @@ export function BooksClient() {
       <section className="books-groups" aria-label="Libros recomendados">
         {groupedBooks.map((group) => (
           <section key={group.label} className="books-group" aria-label={`Sección ${group.label}`}>
-            <h2 className="books-group-title">Título: {group.label}</h2>
+            <h2 className="books-group-title">{group.label}</h2>
             <div className="books-grid books-grid-group">
               {group.items.map((book) => (
                 <article key={book.id} className="book-card">
