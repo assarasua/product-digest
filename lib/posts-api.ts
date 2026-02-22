@@ -145,18 +145,22 @@ function postFromRaw(raw: {
 }
 
 async function fetchPublishedPosts(): Promise<Post[]> {
-  const url = `${getPostsApiBaseUrl()}/api/posts?status=published&limit=1000`;
-  const response = await fetchWithTimeout(url, { next: { revalidate: 60 } }, 5000);
-  if (!response.ok) {
+  try {
+    const url = `${getPostsApiBaseUrl()}/api/posts?status=published&limit=1000`;
+    const response = await fetchWithTimeout(url, { next: { revalidate: 60 } }, 2500);
+    if (!response.ok) {
+      return [];
+    }
+    const payload = (await response.json()) as { posts?: unknown[] };
+    return Array.isArray(payload.posts)
+      ? payload.posts
+          .map((post) => postFromRaw(post as Parameters<typeof postFromRaw>[0]))
+          .filter((post) => post.slug)
+          .sort((a, b) => b.date.localeCompare(a.date))
+      : [];
+  } catch {
     return [];
   }
-  const payload = (await response.json()) as { posts?: unknown[] };
-  return Array.isArray(payload.posts)
-    ? payload.posts
-        .map((post) => postFromRaw(post as Parameters<typeof postFromRaw>[0]))
-        .filter((post) => post.slug)
-        .sort((a, b) => b.date.localeCompare(a.date))
-    : [];
 }
 
 export async function getAllPostsFromApi(): Promise<Post[]> {

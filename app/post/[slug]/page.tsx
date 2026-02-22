@@ -7,7 +7,7 @@ import { compilePost } from "@/lib/compile-post";
 import { getPostBySlugFromApi } from "@/lib/posts-api";
 import { absoluteUrl, getSiteUrl, ogImageUrl } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
