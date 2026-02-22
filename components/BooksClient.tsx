@@ -6,6 +6,7 @@ import { resolveApiBaseUrl } from "@/lib/api-base-url";
 type Book = {
   id: number;
   title: string;
+  label?: string;
   description: string;
   book_url: string;
   image_url?: string;
@@ -73,6 +74,7 @@ export function BooksClient() {
             )}
           </div>
           <div className="book-main">
+            {book.label ? <p className="meta-row">{book.label}</p> : null}
             <h2>{book.title}</h2>
             <p className="summary">{book.description}</p>
           </div>

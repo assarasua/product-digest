@@ -13,6 +13,7 @@ function readArg(flag, fallback = "") {
 }
 
 const title = readArg("--title");
+const label = readArg("--label");
 const description = readArg("--description");
 const url = readArg("--url");
 const imageUrl = readArg("--imageUrl");
@@ -35,6 +36,7 @@ await pool.query(`
   CREATE TABLE IF NOT EXISTS books (
     id BIGSERIAL PRIMARY KEY,
     title TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '',
     description TEXT NOT NULL,
     book_url TEXT NOT NULL,
     image_url TEXT NOT NULL DEFAULT '',
@@ -42,20 +44,22 @@ await pool.query(`
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )
 `);
+await pool.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS label TEXT NOT NULL DEFAULT ''`);
 await pool.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT ''`);
 await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_title_lower_uidx ON books (lower(title))`);
 
 const result = await pool.query(
-  `INSERT INTO books (title, description, book_url, image_url, updated_at)
-   VALUES ($1, $2, $3, $4, NOW())
+  `INSERT INTO books (title, label, description, book_url, image_url, updated_at)
+   VALUES ($1, $2, $3, $4, $5, NOW())
    ON CONFLICT (lower(title))
    DO UPDATE SET
+     label = COALESCE(NULLIF(EXCLUDED.label, ''), books.label),
      description = EXCLUDED.description,
      book_url = EXCLUDED.book_url,
      image_url = COALESCE(NULLIF(EXCLUDED.image_url, ''), books.image_url),
      updated_at = NOW()
-   RETURNING id, title, description, book_url, image_url, created_at, updated_at`,
-  [title, description, url, imageUrl]
+   RETURNING id, title, label, description, book_url, image_url, created_at, updated_at`,
+  [title, label, description, url, imageUrl]
 );
 
 await pool.end();

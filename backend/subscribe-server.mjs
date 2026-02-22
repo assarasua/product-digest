@@ -97,6 +97,7 @@ async function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS books (
       id BIGSERIAL PRIMARY KEY,
       title TEXT NOT NULL,
+      label TEXT NOT NULL DEFAULT '',
       description TEXT NOT NULL,
       book_url TEXT NOT NULL,
       image_url TEXT NOT NULL DEFAULT '',
@@ -104,6 +105,7 @@ async function initializeDatabase() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+  await pool.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS label TEXT NOT NULL DEFAULT ''`);
   await pool.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT ''`);
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_title_lower_uidx ON books (lower(title))`);
   await pool.query(`CREATE INDEX IF NOT EXISTS books_created_at_idx ON books (created_at DESC)`);
@@ -404,7 +406,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       const result = await pool.query(
-        `SELECT id, title, description, book_url, image_url, created_at, updated_at
+        `SELECT id, title, label, description, book_url, image_url, created_at, updated_at
          FROM books
          ORDER BY created_at DESC
          LIMIT $1 OFFSET $2`,
@@ -433,6 +435,7 @@ const server = http.createServer(async (req, res) => {
       const payload = JSON.parse(body || "{}");
 
       const title = String(payload.title || "").trim();
+      const label = String(payload.label || "").trim();
       const description = String(payload.description || "").trim();
       const url = String(payload.url || payload.book_url || "").trim();
       const imageUrl = String(payload.imageUrl || payload.image_url || "").trim();
@@ -451,16 +454,17 @@ const server = http.createServer(async (req, res) => {
       }
 
       const result = await pool.query(
-        `INSERT INTO books (title, description, book_url, image_url, updated_at)
-         VALUES ($1, $2, $3, $4, NOW())
+        `INSERT INTO books (title, label, description, book_url, image_url, updated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())
          ON CONFLICT (lower(title))
          DO UPDATE SET
+           label = EXCLUDED.label,
            description = EXCLUDED.description,
            book_url = EXCLUDED.book_url,
            image_url = EXCLUDED.image_url,
            updated_at = NOW()
-         RETURNING id, title, description, book_url, image_url, created_at, updated_at`,
-        [title, description, url, imageUrl]
+         RETURNING id, title, label, description, book_url, image_url, created_at, updated_at`,
+        [title, label, description, url, imageUrl]
       );
 
       clearBooksCache();
@@ -633,6 +637,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       const title = payload.title === undefined ? undefined : String(payload.title).trim();
+      const label = payload.label === undefined ? undefined : String(payload.label).trim();
       const description = payload.description === undefined ? undefined : String(payload.description).trim();
       const url =
         payload.url === undefined && payload.book_url === undefined
@@ -668,6 +673,10 @@ const server = http.createServer(async (req, res) => {
         updates.push(`title = $${index++}`);
         values.push(title);
       }
+      if (label !== undefined) {
+        updates.push(`label = $${index++}`);
+        values.push(label);
+      }
       if (description !== undefined) {
         updates.push(`description = $${index++}`);
         values.push(description);
@@ -693,7 +702,7 @@ const server = http.createServer(async (req, res) => {
         `UPDATE books
          SET ${updates.join(", ")}
          WHERE id = $${index}
-         RETURNING id, title, description, book_url, image_url, created_at, updated_at`,
+         RETURNING id, title, label, description, book_url, image_url, created_at, updated_at`,
         values
       );
 
