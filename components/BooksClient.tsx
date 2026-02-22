@@ -102,8 +102,10 @@ export function BooksClient() {
             )}
           </div>
           <div className="book-main">
-            {book.label ? <p className="book-label">{book.label}</p> : null}
-            <h2>{book.title}</h2>
+            <div className="book-title-row">
+              <h2>{book.title}</h2>
+              {book.label ? <p className="book-label book-label-right">{book.label}</p> : null}
+            </div>
             <p className="summary">{book.description}</p>
           </div>
           <div className="book-actions">

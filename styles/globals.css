@@ -447,6 +447,24 @@ h3 {
   text-transform: uppercase;
 }
 
+.book-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.book-title-row h2 {
+  margin: 0 0 0.45rem;
+}
+
+.book-label-right {
+  margin: 0.05rem 0 0;
+  border-color: #f0c47a;
+  background: #ffe8bf;
+  color: #7d4b0e;
+}
+
 .book-card {
   display: flex;
   justify-content: space-between;
