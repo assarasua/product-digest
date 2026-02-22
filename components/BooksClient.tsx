@@ -14,10 +14,12 @@ type Book = {
 
 function getBookSectionLabel(book: Book): string {
   const label = String(book.label || "").trim();
-  return label || "General";
+  if (!label) return "General";
+  if (label.toLowerCase() === "ai") return "Inteligencia Artificial";
+  return label;
 }
 
-const sectionOrder = ["Aprende", "Diseña", "Construye", "Lidera", "AI"];
+const sectionOrder = ["Aprende", "Diseña", "Construye", "Lidera", "Inteligencia Artificial"];
 
 function compareSectionLabels(a: string, b: string): number {
   const ia = sectionOrder.indexOf(a);
