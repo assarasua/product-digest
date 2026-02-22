@@ -1,0 +1,86 @@
+.root {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 100;
+  width: min(420px, calc(100vw - 2rem));
+}
+
+.card {
+  border: 1px solid #d8d2c1;
+  border-radius: 14px;
+  background: #f7f4eb;
+  box-shadow: 0 14px 28px rgba(31, 33, 27, 0.16);
+  padding: 0.9rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.15;
+  font-weight: 700;
+  color: #1f211b;
+}
+
+.description {
+  margin: 0.55rem 0 0;
+  color: #4d4f46;
+  font-size: 0.94rem;
+  line-height: 1.45;
+}
+
+.description a {
+  color: #1f211b;
+  text-decoration: underline;
+}
+
+.preferences {
+  margin-top: 0.75rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid #d8d2c1;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.option {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 0.55rem;
+  align-items: start;
+}
+
+.option label {
+  font-weight: 600;
+  color: #1f211b;
+}
+
+.option p {
+  grid-column: 2;
+  margin: 0.05rem 0 0;
+  color: #4d4f46;
+  font-size: 0.87rem;
+}
+
+.actions {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.button {
+  border: 1px solid #d8d2c1;
+  border-radius: 10px;
+  background: #efede7;
+  color: #1f211b;
+  font-size: 0.94rem;
+  padding: 0.42rem 0.72rem;
+  cursor: pointer;
+}
+
+.buttonPrimary {
+  background: #111;
+  border-color: #111;
+  color: #fff;
+}
+
