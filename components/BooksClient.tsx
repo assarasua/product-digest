@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { resolveApiBaseUrl } from "@/lib/api-base-url";
 
 type Book = {
@@ -22,6 +22,7 @@ function getApiBaseUrl(): string {
 export function BooksClient() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -54,6 +55,16 @@ export function BooksClient() {
     };
   }, []);
 
+  const filteredBooks = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return books;
+
+    return books.filter((book) => {
+      const haystack = `${book.title} ${book.label ?? ""} ${book.description}`.toLowerCase();
+      return haystack.includes(normalizedQuery);
+    });
+  }, [books, query]);
+
   if (loading) {
     return <p className="summary">Cargando libros...</p>;
   }
@@ -63,8 +74,25 @@ export function BooksClient() {
   }
 
   return (
-    <section className="books-grid" aria-label="Libros recomendados">
-      {books.map((book) => (
+    <>
+      <section className="books-search-wrap" aria-label="Buscar libros">
+        <label htmlFor="books-search-input" className="search-label">
+          Buscar libros
+        </label>
+        <input
+          id="books-search-input"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Ej: liderazgo, estrategia, discovery..."
+          className="search-input books-search-input"
+        />
+        <p className="search-meta">{filteredBooks.length} resultado(s)</p>
+      </section>
+
+      {filteredBooks.length === 0 ? <p className="summary">No hay libros que coincidan con tu búsqueda.</p> : null}
+
+      <section className="books-grid" aria-label="Libros recomendados">
+        {filteredBooks.map((book) => (
         <article key={book.id} className="book-card">
           <div className="book-cover">
             {book.image_url ? (
@@ -74,7 +102,7 @@ export function BooksClient() {
             )}
           </div>
           <div className="book-main">
-            {book.label ? <p className="meta-row">{book.label}</p> : null}
+            {book.label ? <p className="book-label">{book.label}</p> : null}
             <h2>{book.title}</h2>
             <p className="summary">{book.description}</p>
           </div>
@@ -84,7 +112,8 @@ export function BooksClient() {
             </a>
           </div>
         </article>
-      ))}
-    </section>
+        ))}
+      </section>
+    </>
   );
 }

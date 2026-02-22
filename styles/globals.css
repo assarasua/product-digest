@@ -424,6 +424,29 @@ h3 {
   margin-top: 1.2rem;
 }
 
+.books-search-wrap {
+  margin-top: 1rem;
+}
+
+.books-search-input {
+  max-width: 560px;
+}
+
+.book-label {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 0.45rem;
+  padding: 0.2rem 0.58rem;
+  border-radius: 999px;
+  border: 1px solid #8bc9a0;
+  background: #d9f1e3;
+  color: #0f4f2f;
+  font-size: 0.74rem;
+  letter-spacing: 0.01em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .book-card {
   display: flex;
   justify-content: space-between;
