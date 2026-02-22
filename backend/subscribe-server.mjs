@@ -310,14 +310,29 @@ const server = http.createServer(async (req, res) => {
 
       const values = [limit, offset];
       let sql = `SELECT id, title, description, date_confirmed, event_date, event_time, venue, ticketing_url, event_url, timezone, created_at, updated_at
-                 FROM events`;
+                 FROM events e`;
 
       if (publicOnly) {
-        sql += ` WHERE date_confirmed = FALSE
-                 OR NOW() <= (((event_date::timestamp + event_time) AT TIME ZONE timezone) + INTERVAL '3 days')`;
+        // Use a safe timezone fallback so one bad timezone value does not break the whole listing.
+        sql += ` WHERE e.date_confirmed = FALSE
+                 OR NOW() <= (
+                   (
+                     (e.event_date::timestamp + e.event_time)
+                     AT TIME ZONE COALESCE(
+                       (SELECT ptn.name FROM pg_timezone_names ptn WHERE ptn.name = e.timezone LIMIT 1),
+                       'Europe/Madrid'
+                     )
+                   ) + INTERVAL '3 days'
+                 )`;
       }
 
-      sql += ` ORDER BY ((event_date::timestamp + event_time) AT TIME ZONE timezone) ASC
+      sql += ` ORDER BY (
+                 (e.event_date::timestamp + e.event_time)
+                 AT TIME ZONE COALESCE(
+                   (SELECT ptn.name FROM pg_timezone_names ptn WHERE ptn.name = e.timezone LIMIT 1),
+                   'Europe/Madrid'
+                 )
+               ) ASC
                LIMIT $1 OFFSET $2`;
 
       const result = await pool.query(sql, values);
