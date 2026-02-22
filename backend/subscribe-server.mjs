@@ -304,27 +304,15 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "GET" && parsed.pathname === "/api/events") {
     try {
-      const publicOnly = String(parsed.searchParams.get("public") || "true").toLowerCase() !== "false";
+      // public query param is kept for backwards compatibility, but events are no longer expired.
+      const publicParam = String(parsed.searchParams.get("public") || "true").toLowerCase();
+      void publicParam;
       const limit = Math.min(100, Math.max(1, Number(parsed.searchParams.get("limit") || 20)));
       const offset = Math.max(0, Number(parsed.searchParams.get("offset") || 0));
 
       const values = [limit, offset];
       let sql = `SELECT id, title, description, date_confirmed, event_date, event_time, venue, ticketing_url, event_url, timezone, created_at, updated_at
                  FROM events e`;
-
-      if (publicOnly) {
-        // Use a safe timezone fallback so one bad timezone value does not break the whole listing.
-        sql += ` WHERE e.date_confirmed = FALSE
-                 OR NOW() <= (
-                   (
-                     (e.event_date::timestamp + e.event_time)
-                     AT TIME ZONE COALESCE(
-                       (SELECT ptn.name FROM pg_timezone_names ptn WHERE ptn.name = e.timezone LIMIT 1),
-                       'Europe/Madrid'
-                     )
-                   ) + INTERVAL '3 days'
-                 )`;
-      }
 
       sql += ` ORDER BY (
                  (e.event_date::timestamp + e.event_time)

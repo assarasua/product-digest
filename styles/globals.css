@@ -351,6 +351,25 @@ h3 {
   margin-top: 1.2rem;
 }
 
+.events-section + .events-section {
+  margin-top: 1.6rem;
+}
+
+.events-section-title {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.24rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid #f0c47a;
+  background: #ffe8bf;
+  color: #7d4b0e;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .event-card {
   display: flex;
   justify-content: space-between;
