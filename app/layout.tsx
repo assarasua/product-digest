@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { CookieBanner } from "@/components/CookieBanner";
 import { NavigationTracker } from "@/components/NavigationTracker";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { ogImageUrl } from "@/lib/seo";
@@ -11,7 +10,6 @@ import "../styles/globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://productdigest.es";
 const siteName = "Product Digest";
-const cookieBannerEnabled = process.env.COOKIE_BANNER_ENABLED === "1";
 const siteDescription =
   "Análisis diario sobre gestión de producto, AI PM y estrategia SaaS con marcos aplicables para equipos en crecimiento.";
 
@@ -91,7 +89,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body>
-        <Providers cookieBannerEnabled={cookieBannerEnabled}>
+        <Providers>
           <NavigationTracker />
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
           <div className="site-shell">
@@ -116,7 +114,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <NewsletterSignup />
             </div>
           </div>
-          {cookieBannerEnabled ? <CookieBanner /> : null}
         </Providers>
       </body>
     </html>
