@@ -12,6 +12,11 @@ type Book = {
   image_url?: string;
 };
 
+function getBookSectionLabel(book: Book): string {
+  const label = String(book.label || "").trim();
+  return label || "General";
+}
+
 function getApiBaseUrl(): string {
   return resolveApiBaseUrl(
     process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -65,6 +70,22 @@ export function BooksClient() {
     });
   }, [books, query]);
 
+  const groupedBooks = useMemo(() => {
+    const groups = new Map<string, Book[]>();
+
+    for (const book of filteredBooks) {
+      const label = getBookSectionLabel(book);
+      if (!groups.has(label)) {
+        groups.set(label, []);
+      }
+      groups.get(label)?.push(book);
+    }
+
+    return [...groups.entries()]
+      .sort(([a], [b]) => a.localeCompare(b, "es", { sensitivity: "base" }))
+      .map(([label, items]) => ({ label, items }));
+  }, [filteredBooks]);
+
   if (loading) {
     return <p className="summary">Cargando libros...</p>;
   }
@@ -91,29 +112,33 @@ export function BooksClient() {
 
       {filteredBooks.length === 0 ? <p className="summary">No hay libros que coincidan con tu búsqueda.</p> : null}
 
-      <section className="books-grid" aria-label="Libros recomendados">
-        {filteredBooks.map((book) => (
-        <article key={book.id} className="book-card">
-          <div className="book-cover">
-            {book.image_url ? (
-              <img src={book.image_url} alt={`Portada de ${book.title}`} loading="lazy" />
-            ) : (
-              <span>Sin imagen</span>
-            )}
-          </div>
-          <div className="book-main">
-            <div className="book-title-row">
-              <h2>{book.title}</h2>
-              {book.label ? <p className="book-label book-label-right">{book.label}</p> : null}
+      <section className="books-groups" aria-label="Libros recomendados">
+        {groupedBooks.map((group) => (
+          <section key={group.label} className="books-group" aria-label={`Sección ${group.label}`}>
+            <h2 className="books-group-title">{group.label}</h2>
+            <div className="books-grid books-grid-group">
+              {group.items.map((book) => (
+                <article key={book.id} className="book-card">
+                  <div className="book-cover">
+                    {book.image_url ? (
+                      <img src={book.image_url} alt={`Portada de ${book.title}`} loading="lazy" />
+                    ) : (
+                      <span>Sin imagen</span>
+                    )}
+                  </div>
+                  <div className="book-main">
+                    <h3>{book.title}</h3>
+                    <p className="summary">{book.description}</p>
+                  </div>
+                  <div className="book-actions">
+                    <a className="book-link" href={book.book_url} target="_blank" rel="noopener noreferrer">
+                      Comprar
+                    </a>
+                  </div>
+                </article>
+              ))}
             </div>
-            <p className="summary">{book.description}</p>
-          </div>
-          <div className="book-actions">
-            <a className="book-link" href={book.book_url} target="_blank" rel="noopener noreferrer">
-              Comprar
-            </a>
-          </div>
-        </article>
+          </section>
         ))}
       </section>
     </>

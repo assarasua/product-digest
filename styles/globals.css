@@ -432,37 +432,31 @@ h3 {
   max-width: 560px;
 }
 
-.book-label {
+.books-groups {
+  margin-top: 1.2rem;
+}
+
+.books-group + .books-group {
+  margin-top: 1.4rem;
+}
+
+.books-group-title {
+  margin: 0;
   display: inline-flex;
   align-items: center;
-  margin: 0 0 0.45rem;
-  padding: 0.2rem 0.58rem;
+  padding: 0.24rem 0.7rem;
   border-radius: 999px;
-  border: 1px solid #8bc9a0;
-  background: #d9f1e3;
-  color: #0f4f2f;
-  font-size: 0.74rem;
-  letter-spacing: 0.01em;
+  border: 1px solid #f0c47a;
+  background: #ffe8bf;
+  color: #7d4b0e;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
   font-weight: 700;
   text-transform: uppercase;
 }
 
-.book-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.8rem;
-}
-
-.book-title-row h2 {
-  margin: 0 0 0.45rem;
-}
-
-.book-label-right {
-  margin: 0.05rem 0 0;
-  border-color: #f0c47a;
-  background: #ffe8bf;
-  color: #7d4b0e;
+.books-grid-group {
+  margin-top: 0.8rem;
 }
 
 .book-card {
@@ -504,7 +498,7 @@ h3 {
   display: block;
 }
 
-.book-card h2 {
+.book-card h3 {
   margin: 0 0 0.45rem;
   font-size: 1.22rem;
   line-height: 1.25;
