@@ -17,6 +17,19 @@ function getBookSectionLabel(book: Book): string {
   return label || "General";
 }
 
+const sectionOrder = ["Aprende", "Diseña", "Construye", "Lidera", "AI"];
+
+function compareSectionLabels(a: string, b: string): number {
+  const ia = sectionOrder.indexOf(a);
+  const ib = sectionOrder.indexOf(b);
+
+  if (ia !== -1 && ib !== -1) return ia - ib;
+  if (ia !== -1) return -1;
+  if (ib !== -1) return 1;
+
+  return a.localeCompare(b, "es", { sensitivity: "base" });
+}
+
 function getApiBaseUrl(): string {
   return resolveApiBaseUrl(
     process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -63,7 +76,7 @@ export function BooksClient() {
 
   const availableLabels = useMemo(() => {
     const labels = Array.from(new Set(books.map((book) => getBookSectionLabel(book))));
-    return labels.sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+    return labels.sort(compareSectionLabels);
   }, [books]);
 
   const filteredBooks = useMemo(() => {
@@ -93,7 +106,7 @@ export function BooksClient() {
     }
 
     return [...groups.entries()]
-      .sort(([a], [b]) => a.localeCompare(b, "es", { sensitivity: "base" }))
+      .sort(([a], [b]) => compareSectionLabels(a, b))
       .map(([label, items]) => ({ label, items }));
   }, [filteredBooks]);
 
