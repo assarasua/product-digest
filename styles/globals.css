@@ -43,31 +43,55 @@ a {
   text-decoration: none;
 }
 
-a,
-button,
-[role="button"] {
-  transition: opacity 160ms ease, transform 160ms ease;
+.like-button,
+.event-link,
+.about-link-button,
+.pagination-link,
+.nav-links a,
+.brand-link {
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+  will-change: transform;
 }
 
-a:active,
-button:active,
-[role="button"]:active {
-  opacity: 0.72;
-  transform: scale(0.985);
+.like-button:active,
+.event-link:active,
+.about-link-button:active,
+.pagination-link:active,
+.nav-links a:active,
+.brand-link:active {
+  transform: translateY(1px) scale(0.995);
+  filter: brightness(0.98);
+}
+
+@media (hover: hover) {
+  .like-button:hover,
+  .event-link:hover,
+  .about-link-button:hover,
+  .pagination-link:hover,
+  .nav-links a:hover,
+  .brand-link:hover {
+    transform: translateY(-1px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  a,
-  button,
-  [role="button"] {
+  .like-button,
+  .event-link,
+  .about-link-button,
+  .pagination-link,
+  .nav-links a,
+  .brand-link {
     transition: none;
   }
 
-  a:active,
-  button:active,
-  [role="button"]:active {
-    opacity: 1;
+  .like-button:active,
+  .event-link:active,
+  .about-link-button:active,
+  .pagination-link:active,
+  .nav-links a:active,
+  .brand-link:active {
     transform: none;
+    filter: none;
   }
 }
 
