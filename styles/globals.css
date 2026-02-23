@@ -43,6 +43,34 @@ a {
   text-decoration: none;
 }
 
+a,
+button,
+[role="button"] {
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+a:active,
+button:active,
+[role="button"]:active {
+  opacity: 0.72;
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a,
+  button,
+  [role="button"] {
+    transition: none;
+  }
+
+  a:active,
+  button:active,
+  [role="button"]:active {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .site-shell {
   min-height: 100vh;
 }
