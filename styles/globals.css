@@ -324,6 +324,30 @@ h3 {
   margin-top: -0.4rem;
 }
 
+.about-links {
+  margin: 1rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.about-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent), white 55%);
+  color: color-mix(in srgb, var(--accent), black 15%);
+  background: var(--accent-soft);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.34rem 0.82rem;
+}
+
+.about-link-button:hover {
+  background: color-mix(in srgb, var(--accent-soft), white 25%);
+}
+
 .tag-cloud {
   display: flex;
   flex-wrap: wrap;
