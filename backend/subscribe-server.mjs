@@ -248,6 +248,7 @@ const server = http.createServer(async (req, res) => {
         "POST /api/books",
         "PATCH /api/books/:id",
         "DELETE /api/books/:id",
+        "PATCH /api/product-leaders",
         "GET /api/scheduled-posts",
         "POST /api/scheduled-posts"
       ]
@@ -295,6 +296,63 @@ const server = http.createServer(async (req, res) => {
          ORDER BY rank ASC`
       );
       send(res, 200, { leaders: result.rows });
+      return;
+    } catch {
+      send(res, 500, { error: "db_error" });
+      return;
+    }
+  }
+
+  if (req.method === "PATCH" && parsed.pathname === "/api/product-leaders") {
+    try {
+      const body = await readBody(req);
+      const payload = JSON.parse(body || "{}");
+
+      const description = payload.description === undefined ? undefined : String(payload.description).trim();
+      const rank = payload.rank === undefined ? undefined : Number(payload.rank);
+      const firstName = payload.firstName === undefined ? undefined : String(payload.firstName).trim();
+      const lastName = payload.lastName === undefined ? undefined : String(payload.lastName).trim();
+
+      if (description === undefined || !description) {
+        send(res, 400, { error: "invalid_description" });
+        return;
+      }
+
+      const hasRankSelector = Number.isInteger(rank) && rank > 0;
+      const hasNameSelector = Boolean(firstName && lastName);
+      if (!hasRankSelector && !hasNameSelector) {
+        send(res, 400, { error: "missing_selector", message: "Use rank or firstName+lastName." });
+        return;
+      }
+
+      let result;
+      if (hasRankSelector) {
+        result = await pool.query(
+          `UPDATE product_leaders
+           SET description = $1,
+               updated_at = NOW()
+           WHERE rank = $2
+           RETURNING rank, first_name, last_name, image_url, description, profile_url, source_url, updated_at`,
+          [description, rank]
+        );
+      } else {
+        result = await pool.query(
+          `UPDATE product_leaders
+           SET description = $1,
+               updated_at = NOW()
+           WHERE lower(first_name) = lower($2)
+             AND lower(last_name) = lower($3)
+           RETURNING rank, first_name, last_name, image_url, description, profile_url, source_url, updated_at`,
+          [description, firstName, lastName]
+        );
+      }
+
+      if ((result.rowCount ?? 0) === 0) {
+        send(res, 404, { error: "not_found" });
+        return;
+      }
+
+      send(res, 200, { ok: true, leader: result.rows[0] });
       return;
     } catch {
       send(res, 500, { error: "db_error" });
