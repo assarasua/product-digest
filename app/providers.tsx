@@ -8,6 +8,10 @@ const orgId = process.env.NEXT_PUBLIC_INFINITEWATCH_ORG_ID || "698ee4257fd92064f
 const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY || "c96abb5d544df4471ce868ea3849d764";
 const amplitudeScriptSrc =
   process.env.NEXT_PUBLIC_AMPLITUDE_SCRIPT_SRC || `https://cdn.amplitude.com/script/${amplitudeApiKey}.js`;
+const amplitudeReplaySamplePercent = Math.max(
+  0,
+  Math.min(100, Number(process.env.NEXT_PUBLIC_AMPLITUDE_REPLAY_SAMPLE_PERCENT || 100))
+);
 
 declare global {
   interface Window {
@@ -49,7 +53,7 @@ export function Providers({ children }: { children: ReactNode }) {
     script.onload = () => {
       try {
         const amplitude = window.amplitude;
-        const plugin = amplitude?.sessionReplay?.plugin?.({ sampleRate: 1 });
+        const plugin = amplitude?.sessionReplay?.plugin?.({ sampleRate: amplitudeReplaySamplePercent / 100 });
         if (plugin && amplitude?.add) {
           amplitude.add(plugin);
         }
