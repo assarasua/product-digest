@@ -1,58 +1,42 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
 
-import { getArchiveFromApi } from "@/lib/posts-api";
-import { formatDate, formatMonth } from "@/lib/format";
+import { ArchiveFilterList } from "@/components/ArchiveFilterList";
+import { getAllPostsFromApi } from "@/lib/posts-api";
 import { ogImageUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Archivo",
-  description: "Explora artículos por mes.",
+  title: "Artículos",
+  description: "Explora artículos por mes y filtra por tema o contenido.",
   alternates: {
     canonical: "/archive"
   },
   openGraph: {
-    title: "Archivo | Product Digest",
-    description: "Explora artículos por mes.",
+    title: "Artículos | Product Digest",
+    description: "Explora artículos por mes y filtra por tema o contenido.",
     url: "/archive",
     type: "website",
     images: [{ url: ogImageUrl("Archivo", "Navega por meses y publicaciones") }]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Archivo | Product Digest",
-    description: "Explora artículos por mes.",
+    title: "Artículos | Product Digest",
+    description: "Explora artículos por mes y filtra por tema o contenido.",
     images: [ogImageUrl("Archivo", "Navega por meses y publicaciones")]
   }
 };
 
 export default async function ArchivePage() {
-  const archive = await getArchiveFromApi();
+  const posts = await getAllPostsFromApi();
 
   return (
     <div className="page-wrap slim">
-      <h1>Archivo</h1>
-      <div className="archive-list">
-        {archive.map(({ month, posts }) => (
-          <section key={month} className="archive-month">
-            <h2>
-              {formatMonth(month)} <span className="archive-count">({posts.length})</span>
-            </h2>
-            <ul>
-              {posts.map((post) => (
-                <li key={post.slug}>
-                  <Link href={`/post/${post.slug}`} className="archive-title">
-                    {post.title}
-                  </Link>
-                  <span className="archive-date">{formatDate(post.date)}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
+      <h1>Artículos</h1>
+      <Suspense fallback={<p className="search-meta">Cargando artículos...</p>}>
+        <ArchiveFilterList posts={posts} />
+      </Suspense>
     </div>
   );
 }
