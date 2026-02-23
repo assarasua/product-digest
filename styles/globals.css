@@ -124,6 +124,39 @@ a {
   margin-top: 1.8rem;
 }
 
+.home-filters {
+  margin-top: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--paper), white 28%);
+  box-shadow: var(--shadow);
+  padding: 0.9rem;
+}
+
+.home-filters-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(180px, 1fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.home-filter-field {
+  min-width: 0;
+}
+
+.home-filter-field label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.28rem;
+  color: var(--ink-soft);
+}
+
+.home-filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .pagination {
   margin-top: 1.1rem;
   display: flex;
@@ -305,17 +338,28 @@ h3 {
 }
 
 .archive-list {
-  margin-top: 1rem;
+  margin-top: 0.8rem;
 }
 
 .archive-month {
   border-top: 1px solid var(--line);
-  padding-top: 0.9rem;
-  margin-top: 1.2rem;
+  padding-top: 0.65rem;
+  margin-top: 0.7rem;
 }
 
 .archive-month h2 {
-  margin: 0.2rem 0 0.6rem;
+  margin: 0.05rem 0 0.4rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-size: 1.12rem;
+}
+
+.archive-count {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  font-family: var(--font-sans), sans-serif;
+  font-weight: 500;
 }
 
 .archive-month ul {
@@ -323,18 +367,33 @@ h3 {
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.6rem;
+  gap: 0.45rem;
 }
 
 .archive-month li {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   color: var(--ink-soft);
+  padding: 0.24rem 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--line), transparent 20%);
 }
 
-.archive-month li a {
+.archive-month li:last-child {
+  border-bottom: 0;
+}
+
+.archive-month li a,
+.archive-title {
   color: var(--ink);
+  line-height: 1.32;
+}
+
+.archive-date {
+  font-size: 0.83rem;
+  white-space: nowrap;
 }
 
 .leaders-grid {
@@ -979,5 +1038,23 @@ h3 {
   .newsletter-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .home-filters-form {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+  .home-filter-actions {
+    justify-content: flex-start;
+  }
+
+  .archive-month li {
+    grid-template-columns: 1fr;
+    gap: 0.18rem;
+  }
+
+  .archive-date {
+    font-size: 0.8rem;
   }
 }

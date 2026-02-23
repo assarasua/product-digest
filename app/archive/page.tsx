@@ -37,12 +37,16 @@ export default async function ArchivePage() {
       <div className="archive-list">
         {archive.map(({ month, posts }) => (
           <section key={month} className="archive-month">
-            <h2>{formatMonth(month)}</h2>
+            <h2>
+              {formatMonth(month)} <span className="archive-count">({posts.length})</span>
+            </h2>
             <ul>
               {posts.map((post) => (
                 <li key={post.slug}>
-                  <Link href={`/post/${post.slug}`}>{post.title}</Link>
-                  <span>{formatDate(post.date)}</span>
+                  <Link href={`/post/${post.slug}`} className="archive-title">
+                    {post.title}
+                  </Link>
+                  <span className="archive-date">{formatDate(post.date)}</span>
                 </li>
               ))}
             </ul>
