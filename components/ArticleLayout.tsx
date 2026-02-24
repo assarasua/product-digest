@@ -71,7 +71,7 @@ export function ArticleLayout({
             </figure>
           ) : null}
           <LikeButton slug={slug} />
-          {updatedAt ? <p className="updated-at">Actualizado el {formatDate(updatedAt)}</p> : null}
+          <p className="updated-at">Creado por {author} el {formatDate(date)}</p>
           <div className="tag-row">
             {tags.map((tag) => (
               <TagPill key={tag} tag={tag} />
