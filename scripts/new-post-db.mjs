@@ -16,6 +16,7 @@ function readArg(flag, fallback = "") {
 
 const slug = readArg("--slug").toLowerCase();
 const author = readArg("--author") || "Editorial";
+const origin = (readArg("--origin") || "ia").toLowerCase();
 const title = readArg("--title");
 const summary = readArg("--summary");
 const scheduledAt = readArg("--scheduledAt") || null;
@@ -45,6 +46,10 @@ if (!scheduledAt || Number.isNaN(Date.parse(scheduledAt))) {
   console.error("Missing or invalid --scheduledAt. Use ISO date-time.");
   process.exit(1);
 }
+if (!["ia", "humano"].includes(origin)) {
+  console.error("Invalid --origin. Use ia|humano.");
+  process.exit(1);
+}
 
 const status = "scheduled";
 
@@ -61,6 +66,7 @@ await pool.query(`
     slug TEXT NOT NULL UNIQUE,
     markdown_path TEXT NOT NULL,
     author TEXT NOT NULL DEFAULT 'Editorial',
+    origin TEXT NOT NULL DEFAULT 'ia' CHECK (origin IN ('ia', 'humano')),
     title TEXT NOT NULL,
     summary TEXT NOT NULL,
     content_md TEXT NOT NULL,
@@ -75,12 +81,13 @@ await pool.query(`
 `);
 
 const result = await pool.query(
-  `INSERT INTO posts (slug, markdown_path, author, title, summary, content_md, tags, status, scheduled_at, timezone, updated_at)
-   VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8, $9::timestamptz, $10, NOW())
+  `INSERT INTO posts (slug, markdown_path, author, origin, title, summary, content_md, tags, status, scheduled_at, timezone, updated_at)
+   VALUES ($1, $2, $3, $4, $5, $6, $7, $8::text[], $9, $10::timestamptz, $11, NOW())
    ON CONFLICT (slug)
    DO UPDATE SET
      markdown_path = EXCLUDED.markdown_path,
      author = EXCLUDED.author,
+     origin = EXCLUDED.origin,
      title = EXCLUDED.title,
      summary = EXCLUDED.summary,
      content_md = EXCLUDED.content_md,
@@ -89,11 +96,12 @@ const result = await pool.query(
      scheduled_at = EXCLUDED.scheduled_at,
      timezone = EXCLUDED.timezone,
      updated_at = NOW()
-   RETURNING slug, author, status, scheduled_at`,
+   RETURNING slug, author, origin, status, scheduled_at`,
   [
     slug,
     `db://${slug}`,
     author,
+    origin,
     title,
     summary,
     contentMd,

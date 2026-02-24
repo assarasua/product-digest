@@ -61,6 +61,7 @@ async function initializeDatabase() {
       slug TEXT NOT NULL UNIQUE,
       markdown_path TEXT NOT NULL DEFAULT '',
       author TEXT NOT NULL DEFAULT 'Editorial',
+      origin TEXT NOT NULL DEFAULT 'ia' CHECK (origin IN ('ia', 'humano')),
       title TEXT NOT NULL,
       summary TEXT NOT NULL,
       content_md TEXT NOT NULL,
@@ -77,6 +78,10 @@ async function initializeDatabase() {
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS author TEXT NOT NULL DEFAULT 'Editorial'`);
   await pool.query(`UPDATE posts SET author = 'Editorial' WHERE author IS NULL OR btrim(author) = ''`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS origin TEXT NOT NULL DEFAULT 'ia'`);
+  await pool.query(`UPDATE posts SET origin = 'ia' WHERE origin IS NULL OR btrim(origin) = ''`);
+  await pool.query(`ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_origin_check`);
+  await pool.query(`ALTER TABLE posts ADD CONSTRAINT posts_origin_check CHECK (origin IN ('ia', 'humano'))`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Madrid'`);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS events (
@@ -543,14 +548,20 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && parsed.pathname === "/api/posts") {
     try {
       const status = String(parsed.searchParams.get("status") || "published").trim().toLowerCase();
+      const origin = String(parsed.searchParams.get("origin") || "all").trim().toLowerCase();
       const tag = String(parsed.searchParams.get("tag") || "").trim().toLowerCase();
       const q = String(parsed.searchParams.get("q") || "").trim().toLowerCase();
       const limit = Math.min(100, Math.max(1, Number(parsed.searchParams.get("limit") || 20)));
       const offset = Math.max(0, Number(parsed.searchParams.get("offset") || 0));
       const allowedStatus = new Set(["scheduled", "published", "all"]);
+      const allowedOrigins = new Set(["ia", "humano", "all"]);
 
       if (!allowedStatus.has(status)) {
         send(res, 400, { error: "invalid_status" });
+        return;
+      }
+      if (!allowedOrigins.has(origin)) {
+        send(res, 400, { error: "invalid_origin" });
         return;
       }
 
@@ -561,6 +572,10 @@ const server = http.createServer(async (req, res) => {
       if (status !== "all") {
         where.push(`status = $${index++}`);
         values.push(status);
+      }
+      if (origin !== "all") {
+        where.push(`origin = $${index++}`);
+        values.push(origin);
       }
       if (tag) {
         where.push(`$${index++} = ANY(tags)`);
@@ -575,7 +590,7 @@ const server = http.createServer(async (req, res) => {
       values.push(limit);
       values.push(offset);
 
-      const sql = `SELECT slug, markdown_path, author, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, created_at, updated_at
+      const sql = `SELECT slug, markdown_path, author, origin, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, created_at, updated_at
                    FROM posts
                    ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
                    ORDER BY COALESCE(published_at, scheduled_at, created_at) DESC
@@ -597,6 +612,7 @@ const server = http.createServer(async (req, res) => {
 
       const slug = String(payload.slug || "").trim().toLowerCase();
       const author = String(payload.author || "Editorial").trim() || "Editorial";
+      const origin = String(payload.origin || "ia").trim().toLowerCase() || "ia";
       const title = String(payload.title || "").trim();
       const summary = String(payload.summary || "").trim();
       const contentMd = String(payload.contentMd || payload.content_md || "").trim();
@@ -618,6 +634,10 @@ const server = http.createServer(async (req, res) => {
         send(res, 400, { error: "invalid_status" });
         return;
       }
+      if (!["ia", "humano"].includes(origin)) {
+        send(res, 400, { error: "invalid_origin" });
+        return;
+      }
       if (scheduledAt && Number.isNaN(Date.parse(scheduledAt))) {
         send(res, 400, { error: "invalid_scheduled_at" });
         return;
@@ -626,12 +646,13 @@ const server = http.createServer(async (req, res) => {
       const markdownPath = String(payload.markdownPath || `db://${slug}`).trim();
       const timezone = String(payload.timezone || "Europe/Madrid").trim();
       const result = await pool.query(
-        `INSERT INTO posts (slug, markdown_path, author, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8, $9, $10::timestamptz, CASE WHEN $9 = 'published' THEN NOW() ELSE NULL END, NOW())
+        `INSERT INTO posts (slug, markdown_path, author, origin, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::text[], $9, $10, $11::timestamptz, CASE WHEN $10 = 'published' THEN NOW() ELSE NULL END, NOW())
          ON CONFLICT (slug)
          DO UPDATE SET
            markdown_path = EXCLUDED.markdown_path,
            author = COALESCE(NULLIF(EXCLUDED.author, ''), posts.author),
+           origin = COALESCE(NULLIF(EXCLUDED.origin, ''), posts.origin),
            title = EXCLUDED.title,
            summary = EXCLUDED.summary,
            content_md = EXCLUDED.content_md,
@@ -644,8 +665,8 @@ const server = http.createServer(async (req, res) => {
              ELSE posts.published_at
            END,
            updated_at = NOW()
-         RETURNING slug, author, status, scheduled_at, published_at`,
-        [slug, markdownPath, author, title, summary, contentMd, tags, timezone, status, scheduledAt]
+         RETURNING slug, author, origin, status, scheduled_at, published_at`,
+        [slug, markdownPath, author, origin, title, summary, contentMd, tags, timezone, status, scheduledAt]
       );
 
       send(res, 200, { ok: true, post: result.rows[0] });
@@ -970,7 +991,7 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const result = await pool.query(
-        `SELECT slug, markdown_path, author, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, created_at, updated_at
+        `SELECT slug, markdown_path, author, origin, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, created_at, updated_at
          FROM posts
          WHERE slug = $1
          LIMIT 1`,
@@ -1059,7 +1080,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && isScheduledPostsPath) {
     try {
       const result = await pool.query(
-        `SELECT slug, markdown_path, author, title, summary, content_md, tags, scheduled_at, timezone, status, published_at, updated_at
+        `SELECT slug, markdown_path, author, origin, title, summary, content_md, tags, scheduled_at, timezone, status, published_at, updated_at
          FROM posts
          WHERE status = 'scheduled'
          ORDER BY scheduled_at ASC`
@@ -1079,6 +1100,7 @@ const server = http.createServer(async (req, res) => {
 
       const slug = String(payload.slug || "").trim().toLowerCase();
       const author = String(payload.author || "Editorial").trim() || "Editorial";
+      const origin = String(payload.origin || "ia").trim().toLowerCase() || "ia";
       const markdownPathRaw = String(payload.markdownPath || "").trim();
       const markdownPath = markdownPathRaw || `db://${slug}`;
       const title = String(payload.title || "").trim();
@@ -1111,14 +1133,19 @@ const server = http.createServer(async (req, res) => {
         send(res, 400, { error: "invalid_status" });
         return;
       }
+      if (!["ia", "humano"].includes(origin)) {
+        send(res, 400, { error: "invalid_origin" });
+        return;
+      }
 
       const scheduledResult = await pool.query(
-        `INSERT INTO posts (slug, markdown_path, author, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8::timestamptz, $9, $10, NOW())
+        `INSERT INTO posts (slug, markdown_path, author, origin, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::text[], $9::timestamptz, $10, $11, NOW())
          ON CONFLICT (slug)
          DO UPDATE SET
            markdown_path = EXCLUDED.markdown_path,
            author = COALESCE(NULLIF(EXCLUDED.author, ''), posts.author),
+           origin = COALESCE(NULLIF(EXCLUDED.origin, ''), posts.origin),
            title = COALESCE(NULLIF(EXCLUDED.title, ''), posts.title),
            summary = COALESCE(NULLIF(EXCLUDED.summary, ''), posts.summary),
            content_md = COALESCE(NULLIF(EXCLUDED.content_md, ''), posts.content_md),
@@ -1128,8 +1155,8 @@ const server = http.createServer(async (req, res) => {
            status = EXCLUDED.status,
            published_at = CASE WHEN EXCLUDED.status = 'scheduled' THEN NULL ELSE posts.published_at END,
            updated_at = NOW()
-         RETURNING slug, author, scheduled_at, status`,
-        [slug, markdownPath, author, title, summary, contentMd, tags, scheduledAt, timezone, status]
+         RETURNING slug, author, origin, scheduled_at, status`,
+        [slug, markdownPath, author, origin, title, summary, contentMd, tags, scheduledAt, timezone, status]
       );
 
       send(res, 200, { ok: true, post: scheduledResult.rows[0] });

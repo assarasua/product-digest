@@ -19,6 +19,7 @@ const dateFieldSchema = z
 
 const frontmatterSchema = z.object({
   author: z.string().min(1).optional(),
+  origin: z.enum(["ia", "humano"]).optional(),
   title: z.string().min(1),
   date: dateFieldSchema,
   summary: z.string().min(1),
@@ -136,6 +137,7 @@ function normalizeStringArray(value: unknown): string[] {
 function postFromRaw(raw: {
   slug: string;
   author?: string;
+  origin?: string;
   title: string;
   summary: string;
   tags?: unknown;
@@ -156,6 +158,7 @@ function postFromRaw(raw: {
 
   return {
     author: String(raw.author || "Editorial"),
+    origin: String(raw.origin || "ia").toLowerCase() === "humano" ? "humano" : "ia",
     title: String(raw.title || raw.slug),
     date,
     summary: String(raw.summary || ""),
@@ -222,6 +225,7 @@ function parsePostFile(fileName: string): Post {
   return {
     ...parsed.data,
     author: parsed.data.author || "Editorial",
+    origin: parsed.data.origin ?? "ia",
     status: parsed.data.status ?? (parsed.data.draft === true ? "scheduled" : "published"),
     slug: toSlug(fileName),
     body: content,

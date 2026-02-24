@@ -9,6 +9,7 @@ export type Heading = {
 
 export type Post = {
   author: string;
+  origin: "ia" | "humano";
   title: string;
   date: string;
   summary: string;
@@ -115,6 +116,7 @@ function getPostsApiBaseUrl(): string {
 function postFromRaw(raw: {
   slug: string;
   author?: string;
+  origin?: string;
   title: string;
   summary: string;
   tags?: unknown;
@@ -133,6 +135,7 @@ function postFromRaw(raw: {
 
   return {
     author: String(raw.author || "Editorial"),
+    origin: String(raw.origin || "ia").toLowerCase() === "humano" ? "humano" : "ia",
     title: String(raw.title || raw.slug),
     date,
     summary: String(raw.summary || ""),

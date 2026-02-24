@@ -78,6 +78,7 @@ async function run() {
       id BIGSERIAL PRIMARY KEY,
       slug TEXT NOT NULL UNIQUE,
       author TEXT NOT NULL DEFAULT 'Editorial',
+      origin TEXT NOT NULL DEFAULT 'ia' CHECK (origin IN ('ia', 'humano')),
       title TEXT NOT NULL,
       summary TEXT NOT NULL,
       content_md TEXT NOT NULL,
@@ -98,6 +99,8 @@ async function run() {
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS author TEXT NOT NULL DEFAULT 'Editorial'`);
   await pool.query(`UPDATE posts SET author = 'Editorial' WHERE author IS NULL OR btrim(author) = ''`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS origin TEXT NOT NULL DEFAULT 'ia'`);
+  await pool.query(`UPDATE posts SET origin = 'ia' WHERE origin IS NULL OR btrim(origin) = ''`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Madrid'`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS title TEXT`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS summary TEXT`);
@@ -105,7 +108,7 @@ async function run() {
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`);
 
   const dueScheduled = await pool.query(
-    `SELECT id, slug, markdown_path, author, title, summary, content_md, tags, scheduled_at
+    `SELECT id, slug, markdown_path, author, origin, title, summary, content_md, tags, scheduled_at
      FROM posts
      WHERE status = 'scheduled' AND scheduled_at <= NOW()
      ORDER BY scheduled_at ASC`
@@ -121,6 +124,7 @@ async function run() {
   for (const row of dueScheduled.rows) {
     const slug = String(row.slug);
     let author = String(row.author || "Editorial").trim() || "Editorial";
+    let origin = String(row.origin || "ia").trim().toLowerCase() === "humano" ? "humano" : "ia";
     const scheduledAt = new Date(row.scheduled_at).toISOString();
     let title = String(row.title || "").trim();
     let summary = String(row.summary || "").trim();
@@ -139,6 +143,7 @@ async function run() {
       const source = fs.readFileSync(filePath, "utf8");
       const parsed = matter(source);
       author = author || String(parsed.data.author || "Editorial");
+      origin = String(parsed.data.origin || origin).trim().toLowerCase() === "humano" ? "humano" : "ia";
       title = title || String(parsed.data.title || slug);
       summary = summary || String(parsed.data.summary || "");
       contentMd = contentMd || String(parsed.content || "");
@@ -157,13 +162,14 @@ async function run() {
         `UPDATE posts
            SET markdown_path = $1,
                author = COALESCE(NULLIF($2, ''), author),
-               title = COALESCE(NULLIF($3, ''), title),
-               summary = COALESCE(NULLIF($4, ''), summary),
-               content_md = COALESCE(NULLIF($5, ''), content_md),
-               tags = CASE WHEN array_length($6::text[], 1) IS NULL THEN tags ELSE $6::text[] END,
+               origin = COALESCE(NULLIF($3, ''), origin),
+               title = COALESCE(NULLIF($4, ''), title),
+               summary = COALESCE(NULLIF($5, ''), summary),
+               content_md = COALESCE(NULLIF($6, ''), content_md),
+               tags = CASE WHEN array_length($7::text[], 1) IS NULL THEN tags ELSE $7::text[] END,
                updated_at = NOW()
-           WHERE slug = $7`,
-        [markdownPath, author, title, summary, contentMd, tags, slug]
+           WHERE slug = $8`,
+        [markdownPath, author, origin, title, summary, contentMd, tags, slug]
       );
       }
     }
@@ -178,13 +184,14 @@ async function run() {
        SET status = 'published',
            published_at = NOW(),
            author = COALESCE(NULLIF($1, ''), author),
-           title = COALESCE(NULLIF($2, ''), title),
-           summary = COALESCE(NULLIF($3, ''), summary),
-           content_md = COALESCE(NULLIF($4, ''), content_md),
-           tags = CASE WHEN array_length($5::text[], 1) IS NULL THEN tags ELSE $5::text[] END,
+           origin = COALESCE(NULLIF($2, ''), origin),
+           title = COALESCE(NULLIF($3, ''), title),
+           summary = COALESCE(NULLIF($4, ''), summary),
+           content_md = COALESCE(NULLIF($5, ''), content_md),
+           tags = CASE WHEN array_length($6::text[], 1) IS NULL THEN tags ELSE $6::text[] END,
            updated_at = NOW()
-       WHERE id = $6`,
-      [author, title, summary, contentMd, tags, row.id]
+       WHERE id = $7`,
+      [author, origin, title, summary, contentMd, tags, row.id]
     );
 
     console.log(`Published scheduled post: ${slug}`);
