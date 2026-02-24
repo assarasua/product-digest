@@ -42,7 +42,7 @@ export function ArticleLayout({
         <BackButton />
         <header className="article-header">
           <p className="meta-row">
-            {author} · {formatDate(date)} · {readingTimeMinutes} min de lectura
+            {readingTimeMinutes} {readingTimeMinutes === 1 ? "minuto" : "minutos"} de lectura
           </p>
           <h1>{title}</h1>
           <p className="summary">{summary}</p>
