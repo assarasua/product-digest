@@ -100,7 +100,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 </Link>
                 <div className="nav-links">
                   <Link href="/">Hub IA</Link>
-                  <Link href="/product-builders">Product Builders</Link>
+                  <Link href="/product-builders">Human Insights</Link>
                   <Link href="/product-leaders-wiki">Product Leaders</Link>
                   <Link href="/eventos">Eventos</Link>
                   <Link href="/libros">Libros</Link>

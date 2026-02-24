@@ -9,23 +9,23 @@ import { ogImageUrl } from "@/lib/seo";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Product Builders",
+  title: "Human Insights",
   description: "Artículos escritos por humanos sobre estrategia y ejecución de producto.",
   alternates: {
     canonical: "/product-builders"
   },
   openGraph: {
-    title: "Product Builders | Product Digest",
+    title: "Human Insights | Product Digest",
     description: "Artículos escritos por humanos sobre estrategia y ejecución de producto.",
     url: "/product-builders",
     type: "website",
-    images: [{ url: ogImageUrl("Product Builders", "Aprendizajes humanos para construir producto") }]
+    images: [{ url: ogImageUrl("Human Insights", "Aprendizajes humanos para construir producto") }]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Product Builders | Product Digest",
+    title: "Human Insights | Product Digest",
     description: "Artículos escritos por humanos sobre estrategia y ejecución de producto.",
-    images: [ogImageUrl("Product Builders", "Aprendizajes humanos para construir producto")]
+    images: [ogImageUrl("Human Insights", "Aprendizajes humanos para construir producto")]
   }
 };
 
@@ -35,7 +35,7 @@ export default async function ProductBuildersPage() {
   return (
     <div className="page-wrap">
       <section className="hero">
-        <p className="eyebrow">Product Builders</p>
+        <p className="eyebrow">Human Insights</p>
         <h1>Perspectiva humana para construir mejores productos.</h1>
         <p>Contenido escrito por personas para compartir experiencia real en producto.</p>
       </section>
