@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
 
 import { HomeFeedPagination } from "@/components/HomeFeedPagination";
@@ -40,9 +39,6 @@ export default async function HomePage() {
         <h1>Ideas prácticas para construir mejores productos.</h1>
         <p>
           Este blog reúne marcos, decisiones y análisis aplicables para equipos de producto en etapa de crecimiento.
-        </p>
-        <p>
-          <Link href="/product-leaders-wiki">Ir a Product Leaders</Link>
         </p>
       </section>
 
