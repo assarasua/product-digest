@@ -8,6 +8,7 @@ export type Heading = {
 };
 
 export type Post = {
+  author: string;
   title: string;
   date: string;
   summary: string;
@@ -113,6 +114,7 @@ function getPostsApiBaseUrl(): string {
 
 function postFromRaw(raw: {
   slug: string;
+  author?: string;
   title: string;
   summary: string;
   tags?: unknown;
@@ -130,6 +132,7 @@ function postFromRaw(raw: {
   const readingTimeMinutes = Math.max(1, Math.round(words / 220));
 
   return {
+    author: String(raw.author || "Editorial"),
     title: String(raw.title || raw.slug),
     date,
     summary: String(raw.summary || ""),

@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     other: {
       "article:published_time": post.date,
       "article:modified_time": post.updatedAt ?? post.date,
-      "article:author": "Product Digest",
+      "article:author": post.author,
       "article:section": post.tags[0] ?? "product-management"
     }
   };
@@ -77,8 +77,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     mainEntityOfPage: postUrl,
     url: postUrl,
     author: {
-      "@type": "Organization",
-      name: "Product Digest"
+      "@type": "Person",
+      name: post.author
     },
     publisher: {
       "@type": "Organization",
@@ -98,6 +98,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       <ArticleLayout
         title={post.title}
         slug={post.slug}
+        author={post.author}
         summary={post.summary}
         coverImage={post.coverImage}
         imageDescription={post.imageDescription}

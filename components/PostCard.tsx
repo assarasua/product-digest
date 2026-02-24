@@ -10,7 +10,7 @@ export function PostCard({ post, index }: { post: Post; index: number }) {
   return (
     <article className="post-card" style={{ animationDelay: `${Math.min(index * 60, 320)}ms` }}>
       <p className="meta-row">
-        {formatDate(post.date)} · {post.readingTimeMinutes} min de lectura
+        {post.author} · {formatDate(post.date)} · {post.readingTimeMinutes} min de lectura
       </p>
       <h2>
         <Link href={`/post/${post.slug}`}>{post.title}</Link>

@@ -77,6 +77,7 @@ async function run() {
     CREATE TABLE IF NOT EXISTS posts (
       id BIGSERIAL PRIMARY KEY,
       slug TEXT NOT NULL UNIQUE,
+      author TEXT NOT NULL DEFAULT 'Editorial',
       title TEXT NOT NULL,
       summary TEXT NOT NULL,
       content_md TEXT NOT NULL,
@@ -95,6 +96,8 @@ async function run() {
     )
   `);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS author TEXT NOT NULL DEFAULT 'Editorial'`);
+  await pool.query(`UPDATE posts SET author = 'Editorial' WHERE author IS NULL OR btrim(author) = ''`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Madrid'`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS title TEXT`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS summary TEXT`);
@@ -102,7 +105,7 @@ async function run() {
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`);
 
   const dueScheduled = await pool.query(
-    `SELECT id, slug, markdown_path, title, summary, content_md, tags, scheduled_at
+    `SELECT id, slug, markdown_path, author, title, summary, content_md, tags, scheduled_at
      FROM posts
      WHERE status = 'scheduled' AND scheduled_at <= NOW()
      ORDER BY scheduled_at ASC`
@@ -117,6 +120,7 @@ async function run() {
   let publishedCount = 0;
   for (const row of dueScheduled.rows) {
     const slug = String(row.slug);
+    let author = String(row.author || "Editorial").trim() || "Editorial";
     const scheduledAt = new Date(row.scheduled_at).toISOString();
     let title = String(row.title || "").trim();
     let summary = String(row.summary || "").trim();
@@ -134,6 +138,7 @@ async function run() {
     if ((!title || !summary || !contentMd || tags.length === 0) && filePath && fs.existsSync(filePath)) {
       const source = fs.readFileSync(filePath, "utf8");
       const parsed = matter(source);
+      author = author || String(parsed.data.author || "Editorial");
       title = title || String(parsed.data.title || slug);
       summary = summary || String(parsed.data.summary || "");
       contentMd = contentMd || String(parsed.content || "");
@@ -151,13 +156,14 @@ async function run() {
       await pool.query(
         `UPDATE posts
            SET markdown_path = $1,
-               title = COALESCE(NULLIF($2, ''), title),
-               summary = COALESCE(NULLIF($3, ''), summary),
-               content_md = COALESCE(NULLIF($4, ''), content_md),
-               tags = CASE WHEN array_length($5::text[], 1) IS NULL THEN tags ELSE $5::text[] END,
+               author = COALESCE(NULLIF($2, ''), author),
+               title = COALESCE(NULLIF($3, ''), title),
+               summary = COALESCE(NULLIF($4, ''), summary),
+               content_md = COALESCE(NULLIF($5, ''), content_md),
+               tags = CASE WHEN array_length($6::text[], 1) IS NULL THEN tags ELSE $6::text[] END,
                updated_at = NOW()
-           WHERE slug = $6`,
-        [markdownPath, title, summary, contentMd, tags, slug]
+           WHERE slug = $7`,
+        [markdownPath, author, title, summary, contentMd, tags, slug]
       );
       }
     }
@@ -171,13 +177,14 @@ async function run() {
       `UPDATE posts
        SET status = 'published',
            published_at = NOW(),
-           title = COALESCE(NULLIF($1, ''), title),
-           summary = COALESCE(NULLIF($2, ''), summary),
-           content_md = COALESCE(NULLIF($3, ''), content_md),
-           tags = CASE WHEN array_length($4::text[], 1) IS NULL THEN tags ELSE $4::text[] END,
+           author = COALESCE(NULLIF($1, ''), author),
+           title = COALESCE(NULLIF($2, ''), title),
+           summary = COALESCE(NULLIF($3, ''), summary),
+           content_md = COALESCE(NULLIF($4, ''), content_md),
+           tags = CASE WHEN array_length($5::text[], 1) IS NULL THEN tags ELSE $5::text[] END,
            updated_at = NOW()
-       WHERE id = $5`,
-      [title, summary, contentMd, tags, row.id]
+       WHERE id = $6`,
+      [author, title, summary, contentMd, tags, row.id]
     );
 
     console.log(`Published scheduled post: ${slug}`);

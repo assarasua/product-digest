@@ -18,6 +18,7 @@ const dateFieldSchema = z
   .refine((value) => isoDateRegex.test(value), "Expected YYYY-MM-DD");
 
 const frontmatterSchema = z.object({
+  author: z.string().min(1).optional(),
   title: z.string().min(1),
   date: dateFieldSchema,
   summary: z.string().min(1),
@@ -134,6 +135,7 @@ function normalizeStringArray(value: unknown): string[] {
 
 function postFromRaw(raw: {
   slug: string;
+  author?: string;
   title: string;
   summary: string;
   tags?: unknown;
@@ -153,6 +155,7 @@ function postFromRaw(raw: {
   const stats = readingTime(body);
 
   return {
+    author: String(raw.author || "Editorial"),
     title: String(raw.title || raw.slug),
     date,
     summary: String(raw.summary || ""),
@@ -218,6 +221,7 @@ function parsePostFile(fileName: string): Post {
 
   return {
     ...parsed.data,
+    author: parsed.data.author || "Editorial",
     status: parsed.data.status ?? (parsed.data.draft === true ? "scheduled" : "published"),
     slug: toSlug(fileName),
     body: content,

@@ -15,6 +15,7 @@ function readArg(flag, fallback = "") {
 }
 
 const slug = readArg("--slug").toLowerCase();
+const author = readArg("--author") || "Editorial";
 const title = readArg("--title");
 const summary = readArg("--summary");
 const scheduledAt = readArg("--scheduledAt") || null;
@@ -59,6 +60,7 @@ await pool.query(`
     id BIGSERIAL PRIMARY KEY,
     slug TEXT NOT NULL UNIQUE,
     markdown_path TEXT NOT NULL,
+    author TEXT NOT NULL DEFAULT 'Editorial',
     title TEXT NOT NULL,
     summary TEXT NOT NULL,
     content_md TEXT NOT NULL,
@@ -73,11 +75,12 @@ await pool.query(`
 `);
 
 const result = await pool.query(
-  `INSERT INTO posts (slug, markdown_path, title, summary, content_md, tags, status, scheduled_at, timezone, updated_at)
-   VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8::timestamptz, $9, NOW())
+  `INSERT INTO posts (slug, markdown_path, author, title, summary, content_md, tags, status, scheduled_at, timezone, updated_at)
+   VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8, $9::timestamptz, $10, NOW())
    ON CONFLICT (slug)
    DO UPDATE SET
      markdown_path = EXCLUDED.markdown_path,
+     author = EXCLUDED.author,
      title = EXCLUDED.title,
      summary = EXCLUDED.summary,
      content_md = EXCLUDED.content_md,
@@ -86,8 +89,19 @@ const result = await pool.query(
      scheduled_at = EXCLUDED.scheduled_at,
      timezone = EXCLUDED.timezone,
      updated_at = NOW()
-   RETURNING slug, status, scheduled_at`,
-  [slug, `db://${slug}`, title, summary, contentMd, tags, status, scheduledAt, process.env.SCHEDULE_TIMEZONE || "Europe/Madrid"]
+   RETURNING slug, author, status, scheduled_at`,
+  [
+    slug,
+    `db://${slug}`,
+    author,
+    title,
+    summary,
+    contentMd,
+    tags,
+    status,
+    scheduledAt,
+    process.env.SCHEDULE_TIMEZONE || "Europe/Madrid"
+  ]
 );
 
 await pool.end();

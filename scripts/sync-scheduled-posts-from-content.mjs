@@ -40,6 +40,7 @@ async function run() {
       id BIGSERIAL PRIMARY KEY,
       slug TEXT NOT NULL UNIQUE,
       markdown_path TEXT NOT NULL,
+      author TEXT NOT NULL DEFAULT 'Editorial',
       title TEXT,
       summary TEXT,
       content_md TEXT,
@@ -54,6 +55,8 @@ async function run() {
   `);
 
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS author TEXT NOT NULL DEFAULT 'Editorial'`);
+  await pool.query(`UPDATE posts SET author = 'Editorial' WHERE author IS NULL OR btrim(author) = ''`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS title TEXT`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS summary TEXT`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS content_md TEXT`);
@@ -78,17 +81,19 @@ async function run() {
       continue;
     }
 
+    const author = String(parsed.data.author || "Editorial");
     const title = String(parsed.data.title || slug);
     const summary = String(parsed.data.summary || "");
     const contentMd = String(parsed.content || "");
     const tags = Array.isArray(parsed.data.tags) ? parsed.data.tags.map((tag) => String(tag).toLowerCase()) : [];
 
     await pool.query(
-      `INSERT INTO posts (slug, markdown_path, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6::text[], $7::timestamptz, $8, 'scheduled', NOW())
+      `INSERT INTO posts (slug, markdown_path, author, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8::timestamptz, $9, 'scheduled', NOW())
        ON CONFLICT (slug)
        DO UPDATE SET
          markdown_path = EXCLUDED.markdown_path,
+         author = EXCLUDED.author,
          title = EXCLUDED.title,
          summary = EXCLUDED.summary,
          content_md = EXCLUDED.content_md,
@@ -100,7 +105,7 @@ async function run() {
            ELSE 'scheduled'
          END,
          updated_at = NOW()`,
-      [slug, markdownPath, title, summary, contentMd, tags, scheduledAt, defaultTimezone]
+      [slug, markdownPath, author, title, summary, contentMd, tags, scheduledAt, defaultTimezone]
     );
 
     synced += 1;

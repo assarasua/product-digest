@@ -60,6 +60,7 @@ async function initializeDatabase() {
       id BIGSERIAL PRIMARY KEY,
       slug TEXT NOT NULL UNIQUE,
       markdown_path TEXT NOT NULL DEFAULT '',
+      author TEXT NOT NULL DEFAULT 'Editorial',
       title TEXT NOT NULL,
       summary TEXT NOT NULL,
       content_md TEXT NOT NULL,
@@ -74,6 +75,8 @@ async function initializeDatabase() {
   `);
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS posts_slug_lower_uidx ON posts (lower(slug))`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS markdown_path TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS author TEXT NOT NULL DEFAULT 'Editorial'`);
+  await pool.query(`UPDATE posts SET author = 'Editorial' WHERE author IS NULL OR btrim(author) = ''`);
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Europe/Madrid'`);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS events (
@@ -572,7 +575,7 @@ const server = http.createServer(async (req, res) => {
       values.push(limit);
       values.push(offset);
 
-      const sql = `SELECT slug, markdown_path, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, created_at, updated_at
+      const sql = `SELECT slug, markdown_path, author, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, created_at, updated_at
                    FROM posts
                    ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
                    ORDER BY COALESCE(published_at, scheduled_at, created_at) DESC
@@ -593,6 +596,7 @@ const server = http.createServer(async (req, res) => {
       const payload = JSON.parse(body || "{}");
 
       const slug = String(payload.slug || "").trim().toLowerCase();
+      const author = String(payload.author || "Editorial").trim() || "Editorial";
       const title = String(payload.title || "").trim();
       const summary = String(payload.summary || "").trim();
       const contentMd = String(payload.contentMd || payload.content_md || "").trim();
@@ -622,11 +626,12 @@ const server = http.createServer(async (req, res) => {
       const markdownPath = String(payload.markdownPath || `db://${slug}`).trim();
       const timezone = String(payload.timezone || "Europe/Madrid").trim();
       const result = await pool.query(
-        `INSERT INTO posts (slug, markdown_path, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8, $9::timestamptz, CASE WHEN $8 = 'published' THEN NOW() ELSE NULL END, NOW())
+        `INSERT INTO posts (slug, markdown_path, author, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8, $9, $10::timestamptz, CASE WHEN $9 = 'published' THEN NOW() ELSE NULL END, NOW())
          ON CONFLICT (slug)
          DO UPDATE SET
            markdown_path = EXCLUDED.markdown_path,
+           author = COALESCE(NULLIF(EXCLUDED.author, ''), posts.author),
            title = EXCLUDED.title,
            summary = EXCLUDED.summary,
            content_md = EXCLUDED.content_md,
@@ -639,8 +644,8 @@ const server = http.createServer(async (req, res) => {
              ELSE posts.published_at
            END,
            updated_at = NOW()
-         RETURNING slug, status, scheduled_at, published_at`,
-        [slug, markdownPath, title, summary, contentMd, tags, timezone, status, scheduledAt]
+         RETURNING slug, author, status, scheduled_at, published_at`,
+        [slug, markdownPath, author, title, summary, contentMd, tags, timezone, status, scheduledAt]
       );
 
       send(res, 200, { ok: true, post: result.rows[0] });
@@ -965,7 +970,7 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const result = await pool.query(
-        `SELECT slug, markdown_path, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, created_at, updated_at
+        `SELECT slug, markdown_path, author, title, summary, content_md, tags, timezone, status, scheduled_at, published_at, created_at, updated_at
          FROM posts
          WHERE slug = $1
          LIMIT 1`,
@@ -1054,7 +1059,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && isScheduledPostsPath) {
     try {
       const result = await pool.query(
-        `SELECT slug, markdown_path, title, summary, content_md, tags, scheduled_at, timezone, status, published_at, updated_at
+        `SELECT slug, markdown_path, author, title, summary, content_md, tags, scheduled_at, timezone, status, published_at, updated_at
          FROM posts
          WHERE status = 'scheduled'
          ORDER BY scheduled_at ASC`
@@ -1073,6 +1078,7 @@ const server = http.createServer(async (req, res) => {
       const payload = JSON.parse(body || "{}");
 
       const slug = String(payload.slug || "").trim().toLowerCase();
+      const author = String(payload.author || "Editorial").trim() || "Editorial";
       const markdownPathRaw = String(payload.markdownPath || "").trim();
       const markdownPath = markdownPathRaw || `db://${slug}`;
       const title = String(payload.title || "").trim();
@@ -1107,11 +1113,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       const scheduledResult = await pool.query(
-        `INSERT INTO posts (slug, markdown_path, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6::text[], $7::timestamptz, $8, $9, NOW())
+        `INSERT INTO posts (slug, markdown_path, author, title, summary, content_md, tags, scheduled_at, timezone, status, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8::timestamptz, $9, $10, NOW())
          ON CONFLICT (slug)
          DO UPDATE SET
            markdown_path = EXCLUDED.markdown_path,
+           author = COALESCE(NULLIF(EXCLUDED.author, ''), posts.author),
            title = COALESCE(NULLIF(EXCLUDED.title, ''), posts.title),
            summary = COALESCE(NULLIF(EXCLUDED.summary, ''), posts.summary),
            content_md = COALESCE(NULLIF(EXCLUDED.content_md, ''), posts.content_md),
@@ -1121,8 +1128,8 @@ const server = http.createServer(async (req, res) => {
            status = EXCLUDED.status,
            published_at = CASE WHEN EXCLUDED.status = 'scheduled' THEN NULL ELSE posts.published_at END,
            updated_at = NOW()
-         RETURNING slug, scheduled_at, status`,
-        [slug, markdownPath, title, summary, contentMd, tags, scheduledAt, timezone, status]
+         RETURNING slug, author, scheduled_at, status`,
+        [slug, markdownPath, author, title, summary, contentMd, tags, scheduledAt, timezone, status]
       );
 
       send(res, 200, { ok: true, post: scheduledResult.rows[0] });

@@ -10,6 +10,7 @@ import { formatDate } from "@/lib/format";
 export function ArticleLayout({
   title,
   slug,
+  author,
   summary,
   coverImage,
   imageDescription,
@@ -23,6 +24,7 @@ export function ArticleLayout({
 }: {
   title: string;
   slug: string;
+  author: string;
   summary: string;
   coverImage?: string;
   imageDescription?: string;
@@ -40,7 +42,7 @@ export function ArticleLayout({
         <BackButton />
         <header className="article-header">
           <p className="meta-row">
-            {formatDate(date)} · {readingTimeMinutes} min de lectura
+            {author} · {formatDate(date)} · {readingTimeMinutes} min de lectura
           </p>
           <h1>{title}</h1>
           <p className="summary">{summary}</p>
