@@ -2,6 +2,34 @@ import { Fragment, createElement, type ReactNode } from "react";
 
 import type { Post } from "@/lib/posts-api";
 
+function extractYouTubeVideoId(value: string): string | null {
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase();
+
+    if (host === "youtu.be") {
+      const id = parsed.pathname.replace(/^\/+/, "").split("/")[0];
+      return /^[A-Za-z0-9_-]{6,20}$/.test(id) ? id : null;
+    }
+
+    if (host === "youtube.com" || host === "www.youtube.com" || host === "m.youtube.com") {
+      if (parsed.pathname === "/watch") {
+        const id = parsed.searchParams.get("v") || "";
+        return /^[A-Za-z0-9_-]{6,20}$/.test(id) ? id : null;
+      }
+
+      const embedMatch = parsed.pathname.match(/^\/(?:embed|shorts)\/([A-Za-z0-9_-]{6,20})$/);
+      if (embedMatch) {
+        return embedMatch[1];
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 function renderInline(text: string): ReactNode[] {
   const parts: ReactNode[] = [];
   const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
@@ -90,6 +118,40 @@ export async function compilePost(post: Post): Promise<ReactNode> {
     const line = rawLine.trim();
     if (!line) {
       flushList();
+      continue;
+    }
+
+    const youtube = line.match(/^\[youtube\]\((https?:\/\/[^\s)]+)\)$/i);
+    if (youtube) {
+      flushList();
+      const videoUrl = youtube[1];
+      const videoId = extractYouTubeVideoId(videoUrl);
+      if (videoId) {
+        blocks.push(
+          createElement(
+            "div",
+            { key: `yt-${key}`, className: "video-embed" },
+            createElement("iframe", {
+              src: `https://www.youtube-nocookie.com/embed/${videoId}`,
+              title: "YouTube video player",
+              loading: "lazy",
+              allow:
+                "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+              referrerPolicy: "strict-origin-when-cross-origin",
+              allowFullScreen: true
+            })
+          )
+        );
+      } else {
+        blocks.push(
+          createElement(
+            "p",
+            { key: `yt-fallback-${key}` },
+            createElement("a", { href: videoUrl, target: "_blank", rel: "noreferrer" }, "Ver video en YouTube")
+          )
+        );
+      }
+      key += 1;
       continue;
     }
 
