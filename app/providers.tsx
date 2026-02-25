@@ -25,6 +25,7 @@ declare global {
       };
     };
     __pdAmplitudeLoaded?: boolean;
+    __pdAmplitudeLoading?: boolean;
   }
 }
 
@@ -79,10 +80,17 @@ export function Providers({ children }: { children: ReactNode }) {
         existingScript.remove();
       }
       window.__pdAmplitudeLoaded = false;
+      window.__pdAmplitudeLoading = false;
       return;
     }
 
-    if (!windowLoaded || !amplitudeApiKey || window.__pdAmplitudeLoaded) {
+    if (!windowLoaded || !amplitudeApiKey || window.__pdAmplitudeLoaded || window.__pdAmplitudeLoading) {
+      return;
+    }
+
+    const existingScript = document.getElementById("pd-amplitude-sdk");
+    if (existingScript) {
+      window.__pdAmplitudeLoading = true;
       return;
     }
 
@@ -90,6 +98,7 @@ export function Providers({ children }: { children: ReactNode }) {
     script.id = "pd-amplitude-sdk";
     script.src = amplitudeScriptSrc;
     script.async = true;
+    window.__pdAmplitudeLoading = true;
 
     script.onload = () => {
       try {
@@ -120,15 +129,22 @@ export function Providers({ children }: { children: ReactNode }) {
         });
         amplitude?.setOptOut?.(false);
         window.__pdAmplitudeLoaded = true;
+        window.__pdAmplitudeLoading = false;
       } catch {
         // Avoid blocking render if analytics init fails.
+        window.__pdAmplitudeLoading = false;
       }
+    };
+
+    script.onerror = () => {
+      window.__pdAmplitudeLoading = false;
     };
 
     document.head.appendChild(script);
 
     return () => {
       script.onload = null;
+      script.onerror = null;
     };
   }, [analyticsAllowed, consentResolved, windowLoaded]);
 
