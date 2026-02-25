@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { CookieBanner } from "@/components/CookieBanner";
 import { NavigationTracker } from "@/components/NavigationTracker";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { ogImageUrl } from "@/lib/seo";
@@ -114,6 +115,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <div className="page-wrap">
               <NewsletterSignup />
             </div>
+            <CookieBanner />
           </div>
         </Providers>
       </body>

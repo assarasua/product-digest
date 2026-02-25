@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { InfiniteWatchProvider } from "@infinitewatch/next";
+import { consentUpdatedEvent, readCookieConsent, type CookieConsent } from "@/lib/cookie-consent";
 
 const orgId = process.env.NEXT_PUBLIC_INFINITEWATCH_ORG_ID || "698ee4257fd92064f9aac24c";
 const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY || "c96abb5d544df4471ce868ea3849d764";
@@ -18,6 +19,7 @@ declare global {
     amplitude?: {
       add?: (plugin: unknown) => void;
       init?: (key: string, options?: Record<string, unknown>) => void;
+      setOptOut?: (value: boolean) => void;
       sessionReplay?: {
         plugin?: (options?: Record<string, unknown>) => unknown;
       };
@@ -28,6 +30,8 @@ declare global {
 
 export function Providers({ children }: { children: ReactNode }) {
   const [windowLoaded, setWindowLoaded] = useState(false);
+  const [consentResolved, setConsentResolved] = useState(false);
+  const [analyticsAllowed, setAnalyticsAllowed] = useState(false);
 
   useEffect(() => {
     const onLoad = () => setWindowLoaded(true);
@@ -42,11 +46,48 @@ export function Providers({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const syncConsent = () => {
+      const consent = readCookieConsent();
+      setAnalyticsAllowed(Boolean(consent?.analytics));
+      setConsentResolved(true);
+    };
+
+    const onConsentUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<CookieConsent>).detail;
+      if (detail && typeof detail.analytics === "boolean") {
+        setAnalyticsAllowed(detail.analytics);
+        setConsentResolved(true);
+        return;
+      }
+      syncConsent();
+    };
+
+    syncConsent();
+    window.addEventListener(consentUpdatedEvent, onConsentUpdated as EventListener);
+    return () => window.removeEventListener(consentUpdatedEvent, onConsentUpdated as EventListener);
+  }, []);
+
+  useEffect(() => {
+    if (!windowLoaded || !consentResolved) {
+      return;
+    }
+
+    if (!analyticsAllowed) {
+      window.amplitude?.setOptOut?.(true);
+      const existingScript = document.getElementById("pd-amplitude-sdk");
+      if (existingScript) {
+        existingScript.remove();
+      }
+      window.__pdAmplitudeLoaded = false;
+      return;
+    }
+
     if (!windowLoaded || !amplitudeApiKey || window.__pdAmplitudeLoaded) {
       return;
     }
 
     const script = document.createElement("script");
+    script.id = "pd-amplitude-sdk";
     script.src = amplitudeScriptSrc;
     script.async = true;
 
@@ -77,6 +118,7 @@ export function Providers({ children }: { children: ReactNode }) {
             }
           }
         });
+        amplitude?.setOptOut?.(false);
         window.__pdAmplitudeLoaded = true;
       } catch {
         // Avoid blocking render if analytics init fails.
@@ -88,9 +130,9 @@ export function Providers({ children }: { children: ReactNode }) {
     return () => {
       script.onload = null;
     };
-  }, [windowLoaded]);
+  }, [analyticsAllowed, consentResolved, windowLoaded]);
 
-  if (!windowLoaded) {
+  if (!windowLoaded || !consentResolved || !analyticsAllowed) {
     return <>{children}</>;
   }
 
