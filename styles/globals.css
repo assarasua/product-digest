@@ -1186,6 +1186,32 @@ h3 {
   animation: popup-modal-in var(--motion-base) var(--ease-emphasis) both;
 }
 
+.newsletter-popup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.35rem;
+}
+
+.newsletter-popup-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.newsletter-popup-benefits {
+  margin: 0 0 0.65rem;
+  padding-left: 1.15rem;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  display: grid;
+  gap: 0.18rem;
+}
+
 .newsletter-popup-modal .newsletter-card {
   margin-top: 0;
 }
@@ -1206,6 +1232,18 @@ h3 {
   cursor: pointer;
 }
 
+.newsletter-popup-dismiss {
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin-top: 0.5rem;
+  cursor: pointer;
+}
+
 .article-shell {
   display: grid;
   grid-template-columns: minmax(0, 680px) minmax(220px, 260px);
@@ -1215,10 +1253,6 @@ h3 {
 
 .article-main {
   min-width: 0;
-}
-
-.article-inline-newsletter {
-  margin-top: 1.2rem;
 }
 
 .back-button {

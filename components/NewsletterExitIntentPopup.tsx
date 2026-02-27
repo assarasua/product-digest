@@ -140,7 +140,9 @@ export function NewsletterExitIntentPopup({ cooldownDays = 7, enabled = true }: 
     if (isOpen || !enabled || !wasOpenedRef.current) return;
 
     trackAnalyticsEvent({ type: "newsletter_popup_dismissed", reason: closeReasonRef.current });
-    window.localStorage.setItem(dismissedAtKey, String(Date.now()));
+    if (closeReasonRef.current !== "success") {
+      window.localStorage.setItem(dismissedAtKey, String(Date.now()));
+    }
     previousFocusRef.current?.focus();
     wasOpenedRef.current = false;
   }, [enabled, isOpen]);
@@ -165,26 +167,44 @@ export function NewsletterExitIntentPopup({ cooldownDays = 7, enabled = true }: 
         aria-label="Suscríbete a Product Digest"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          className="newsletter-popup-close"
-          onClick={() => {
-            closeReasonRef.current = "close-button";
-            setIsOpen(false);
-          }}
-        >
-          Cerrar
-        </button>
+        <div className="newsletter-popup-head">
+          <p className="newsletter-popup-kicker">Product Digest semanal</p>
+          <button
+            type="button"
+            className="newsletter-popup-close"
+            onClick={() => {
+              closeReasonRef.current = "close-button";
+              setIsOpen(false);
+            }}
+          >
+            Cerrar
+          </button>
+        </div>
+        <ul className="newsletter-popup-benefits" aria-label="Beneficios de suscripción">
+          <li>Un email semanal en español.</li>
+          <li>Marcos accionables para decisiones de producto.</li>
+          <li>Sin spam, baja en un clic.</li>
+        </ul>
         <NewsletterSignup
           source="popup-exit-intent"
-          title="Antes de irte: recibe ideas aplicables de producto"
-          description="Un email semanal, sin ruido, con marcos prácticos para mejorar decisión y ejecución."
+          title="Antes de irte: únete al Product Knowledge Center"
+          description="Recibe una selección breve con lo más útil para PMs de producto y AI."
           onSuccess={() => {
             window.sessionStorage.setItem(subscribedSessionKey, "1");
             closeReasonRef.current = "success";
             setIsOpen(false);
           }}
         />
+        <button
+          type="button"
+          className="newsletter-popup-dismiss"
+          onClick={() => {
+            closeReasonRef.current = "close-button";
+            setIsOpen(false);
+          }}
+        >
+          Ahora no
+        </button>
       </div>
     </div>
   );

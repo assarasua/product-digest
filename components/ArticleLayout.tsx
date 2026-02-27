@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { ArticleNextAction } from "@/components/ArticleNextAction";
 import { BackButton } from "@/components/BackButton";
 import { LikeButton } from "@/components/LikeButton";
-import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { TagPill } from "@/components/TagPill";
 import { TableOfContents } from "@/components/TableOfContents";
 import type { Heading } from "@/lib/posts-api";
@@ -80,13 +79,6 @@ export function ArticleLayout({
             ))}
           </div>
         </header>
-        <section className="article-inline-newsletter" aria-label="Suscripción recomendada">
-          <NewsletterSignup
-            source="article-inline"
-            title="Recibe marcos prácticos en tu email"
-            description="Suscríbete para recibir una selección semanal con ideas accionables para Product Managers."
-          />
-        </section>
         <section className="prose-content">{children}</section>
         <ArticleNextAction />
       </article>

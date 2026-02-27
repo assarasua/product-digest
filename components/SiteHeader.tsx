@@ -34,7 +34,7 @@ const navGroups: NavGroup[] = [
   },
   {
     id: "recursos",
-    label: "Product Knowledge Center",
+    label: "Product Hub",
     href: "/product-leaders-wiki",
     routePrefixes: ["/eventos", "/product-leaders-wiki", "/libros"],
     items: [
@@ -48,10 +48,7 @@ const navGroups: NavGroup[] = [
     label: "Acerca de",
     href: "/about",
     routePrefixes: ["/about", "/cookies"],
-    items: [
-      { href: "/about", label: "Acerca de" },
-      { href: "/cookies", label: "Cookies" }
-    ]
+    items: [{ href: "/about", label: "Acerca de" }]
   }
 ];
 
