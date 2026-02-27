@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { CookieBanner } from "@/components/CookieBanner";
 import { NavigationTracker } from "@/components/NavigationTracker";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { SiteHeader } from "@/components/SiteHeader";
 import { ogImageUrl } from "@/lib/seo";
 import { Providers } from "./providers";
 import "../styles/globals.css";
@@ -94,25 +94,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <NavigationTracker />
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
           <div className="site-shell">
+            <a href="#main-content" className="skip-link">
+              Saltar al contenido principal
+            </a>
             <header className="site-header">
-              <nav className="site-nav">
-                <Link href="/" className="brand-link">
-                  Product Digest
-                </Link>
-                <div className="nav-links">
-                  <Link href="/">Hub IA</Link>
-                  <Link href="/product-builders">Human Insights</Link>
-                  <Link href="/product-leaders-wiki">Product Leaders</Link>
-                  <Link href="/eventos">Eventos</Link>
-                  <Link href="/libros">Libros</Link>
-                  <Link href="/archive">Artículos</Link>
-                  <Link href="/about">Acerca de</Link>
-                </div>
-              </nav>
+              <SiteHeader />
             </header>
-            <main>{children}</main>
+            <main id="main-content" tabIndex={-1}>
+              {children}
+            </main>
             <div className="page-wrap">
-              <NewsletterSignup />
+              <NewsletterSignup source="global" />
             </div>
             <CookieBanner />
           </div>

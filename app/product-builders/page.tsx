@@ -54,7 +54,7 @@ export default async function ProductBuildersPage() {
             </section>
           }
         >
-          <HomeFeedPagination posts={posts} />
+          <HomeFeedPagination posts={posts} basePath="/product-builders" />
         </Suspense>
       )}
     </div>

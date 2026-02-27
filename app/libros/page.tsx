@@ -30,11 +30,14 @@ export const metadata: Metadata = {
 export default function BooksPage() {
   return (
     <div className="page-wrap">
-      <h1>Libros</h1>
-      <p className="page-intro">
-        El lugar donde Product Managers, Product Leaders y Product Builders encuentran lecturas de alto impacto para
-        mejorar decisiones, estrategia y ejecución.
-      </p>
+      <section className="hero">
+        <p className="eyebrow">Libros</p>
+        <h1>Lecturas de alto impacto para mejorar criterio de producto.</h1>
+        <p>
+          Selección curada para Product Managers, Product Leaders y Product Builders que quieren tomar mejores
+          decisiones de estrategia y ejecución.
+        </p>
+      </section>
       <BooksClient />
     </div>
   );

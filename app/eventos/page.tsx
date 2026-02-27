@@ -55,11 +55,14 @@ export default async function EventsPage() {
 
   return (
     <div className="page-wrap">
-      <h1>Eventos</h1>
-      <p className="page-intro">
-        El lugar donde Product Managers, Product Leaders y Product Builders acuden para descubrir
-        eventos clave, aprender de referentes y conectar con la comunidad global de producto.
-      </p>
+      <section className="hero">
+        <p className="eyebrow">Eventos</p>
+        <h1>Agenda para Product Managers y Product Builders.</h1>
+        <p>
+          Descubre eventos clave para aprender de referentes, conectar con la comunidad y llevar mejores prácticas a
+          tu equipo.
+        </p>
+      </section>
 
       {events.length === 0 ? (
         <p className="summary">No hay eventos disponibles ahora.</p>

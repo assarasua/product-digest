@@ -33,7 +33,11 @@ export default async function ArchivePage() {
 
   return (
     <div className="page-wrap slim">
-      <h1>Artículos</h1>
+      <section className="hero">
+        <p className="eyebrow">Artículos</p>
+        <h1>Archivo completo de Product Digest.</h1>
+        <p>Filtra por tema o por palabra clave para encontrar contenido relevante en segundos.</p>
+      </section>
       <Suspense fallback={<p className="search-meta">Cargando artículos...</p>}>
         <ArchiveFilterList posts={posts} />
       </Suspense>

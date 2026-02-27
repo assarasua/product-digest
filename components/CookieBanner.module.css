@@ -49,12 +49,32 @@
   text-decoration: underline;
 }
 
+.description a:focus-visible {
+  outline: 2px solid #1f7a3f;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 .preferences {
   margin-top: 0.75rem;
   padding-top: 0.7rem;
   border-top: 1px solid #d8d2c1;
   display: grid;
   gap: 0.6rem;
+  padding-left: 0;
+  padding-right: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  min-width: 0;
+}
+
+.legend {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #4d4f46;
+  padding: 0;
+  margin-bottom: 0.3rem;
 }
 
 .option {
@@ -97,4 +117,11 @@
   background: #111;
   border-color: #111;
   color: #fff;
+}
+
+.launcher:focus-visible,
+.button:focus-visible,
+.option input:focus-visible {
+  outline: 2px solid #1f7a3f;
+  outline-offset: 2px;
 }

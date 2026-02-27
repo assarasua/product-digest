@@ -68,15 +68,14 @@ export default async function ProductLeadersWikiPage() {
 
   return (
     <div className="page-wrap">
-      <h1>Product Leaders</h1>
-      <p className="page-intro">
-        Product Leaders reúne a referentes de gestión de producto a nivel mundial: una selección curada de líderes que
-        están marcando cómo se diseña, prioriza y escala producto en empresas de alto impacto.
-      </p>
-      <p className="page-intro">
-        Aquí encontrarás sus perfiles, contexto profesional y enlaces para seguir sus ideas, detectar tendencias y
-        elevar tu criterio de producto con visión global.
-      </p>
+      <section className="hero">
+        <p className="eyebrow">Product Leaders</p>
+        <h1>Referentes globales para elevar tu criterio de producto.</h1>
+        <p>
+          Explora perfiles y trayectorias de líderes que están marcando cómo se diseña, prioriza y escala producto en
+          compañías de alto impacto.
+        </p>
+      </section>
 
       {leaders.length === 0 ? (
         <p className="summary">Aún no hay datos cargados para Product Leaders.</p>

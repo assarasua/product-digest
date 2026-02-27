@@ -76,27 +76,28 @@ export function CookieBanner() {
         </p>
 
         {showPreferences ? (
-          <div className={styles.preferences}>
+          <fieldset className={styles.preferences}>
+            <legend className={styles.legend}>Preferencias de cookies</legend>
             <div className={styles.option}>
-              <input type="checkbox" checked readOnly aria-label="Esenciales" />
+              <input id="cookie-necessary" type="checkbox" checked readOnly disabled />
               <div>
-                <label>Esenciales</label>
+                <label htmlFor="cookie-necessary">Esenciales</label>
                 <p>Necesarias para funciones básicas del sitio.</p>
               </div>
             </div>
             <div className={styles.option}>
               <input
+                id="cookie-analytics"
                 type="checkbox"
                 checked={analytics}
                 onChange={(event) => setAnalytics(event.target.checked)}
-                aria-label="Analíticas"
               />
               <div>
-                <label>Analíticas</label>
+                <label htmlFor="cookie-analytics">Analíticas</label>
                 <p>Nos ayudan a medir y mejorar la experiencia.</p>
               </div>
             </div>
-        </div>
+          </fieldset>
         ) : null}
 
         <div className={styles.actions}>

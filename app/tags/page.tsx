@@ -32,8 +32,11 @@ export default async function TagsPage() {
 
   return (
     <div className="page-wrap slim">
-      <h1>Temas</h1>
-      <p className="page-intro">Navega por área de interés.</p>
+      <section className="hero">
+        <p className="eyebrow">Temas</p>
+        <h1>Explora artículos por área de interés.</h1>
+        <p>Encuentra rápidamente contenido por categorías para profundizar en lo que más te importa.</p>
+      </section>
       <div className="tag-cloud">
         {tags.map(({ tag, count }) => (
           <div key={tag} className="tag-with-count">
