@@ -108,7 +108,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <div className="page-wrap">
               <NewsletterSignup source="global" />
             </div>
-            <NewsletterExitIntentPopup cooldownDays={7} />
+            <NewsletterExitIntentPopup />
             <CookieBanner />
           </div>
         </Providers>

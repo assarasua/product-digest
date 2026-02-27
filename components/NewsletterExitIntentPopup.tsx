@@ -1,93 +1,50 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 
-const dismissedAtKey = "pd-newsletter-popup:dismissed-at";
-const shownSessionKey = "pd-newsletter-popup:shown-session";
+const shownEverKey = "pd-newsletter-popup:shown-ever";
 const subscribedSessionKey = "pd-newsletter-popup:subscribed-session";
-function isMobileViewport(): boolean {
-  return typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
-}
+const popupDelayMs = 30_000;
 
-export function NewsletterExitIntentPopup({ cooldownDays = 7, enabled = true }: { cooldownDays?: number; enabled?: boolean }) {
+export function NewsletterExitIntentPopup({ enabled = true }: { enabled?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const canShowRef = useRef(false);
   const wasOpenedRef = useRef(false);
   const closeReasonRef = useRef<"close-button" | "overlay" | "escape" | "success">("close-button");
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const modalRef = useRef<HTMLDivElement | null>(null);
-  const cooldownMs = useMemo(() => Math.max(1, cooldownDays) * 24 * 60 * 60 * 1000, [cooldownDays]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") {
       return;
     }
 
-    const dismissedAt = Number(window.localStorage.getItem(dismissedAtKey) || "0");
-    const shownThisSession = window.sessionStorage.getItem(shownSessionKey) === "1";
+    const shownEver = window.localStorage.getItem(shownEverKey) === "1";
     const subscribedThisSession = window.sessionStorage.getItem(subscribedSessionKey) === "1";
-    canShowRef.current = !shownThisSession && !subscribedThisSession && (!dismissedAt || Date.now() - dismissedAt >= cooldownMs);
-  }, [cooldownMs, enabled]);
+    canShowRef.current = !shownEver && !subscribedThisSession;
+  }, [enabled]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined" || !canShowRef.current) {
       return;
     }
 
-    const showPopup = (trigger: "exit-intent-desktop" | "back-intent-mobile") => {
+    const timer = window.setTimeout(() => {
       if (!canShowRef.current) return;
 
       canShowRef.current = false;
       wasOpenedRef.current = true;
       previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      window.sessionStorage.setItem(shownSessionKey, "1");
-      trackAnalyticsEvent({ type: "newsletter_popup_shown", trigger });
+      window.localStorage.setItem(shownEverKey, "1");
+      trackAnalyticsEvent({ type: "newsletter_popup_shown", trigger: "time-on-page-30s" });
       setIsOpen(true);
-    };
-
-    const onMouseLeave = (event: MouseEvent) => {
-      if (isMobileViewport()) return;
-      if (event.clientY <= 0) {
-        showPopup("exit-intent-desktop");
-      }
-    };
-
-    let hiddenAt = 0;
-
-    const onPopState = () => {
-      if (!isMobileViewport()) return;
-      showPopup("back-intent-mobile");
-    };
-
-    const onVisibilityChange = () => {
-      if (!isMobileViewport()) return;
-      if (document.visibilityState === "hidden") {
-        hiddenAt = Date.now();
-        return;
-      }
-
-      if (document.visibilityState === "visible" && hiddenAt > 0) {
-        const wasBriefLeave = Date.now() - hiddenAt <= 45000;
-        hiddenAt = 0;
-        if (wasBriefLeave) {
-          showPopup("back-intent-mobile");
-        }
-      }
-    };
-
-    document.addEventListener("mouseleave", onMouseLeave);
-    if (isMobileViewport()) {
-      window.addEventListener("popstate", onPopState);
-      document.addEventListener("visibilitychange", onVisibilityChange);
-    }
+    }, popupDelayMs);
 
     return () => {
-      document.removeEventListener("mouseleave", onMouseLeave);
-      window.removeEventListener("popstate", onPopState);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.clearTimeout(timer);
     };
   }, [enabled]);
 
@@ -140,9 +97,6 @@ export function NewsletterExitIntentPopup({ cooldownDays = 7, enabled = true }: 
     if (isOpen || !enabled || !wasOpenedRef.current) return;
 
     trackAnalyticsEvent({ type: "newsletter_popup_dismissed", reason: closeReasonRef.current });
-    if (closeReasonRef.current !== "success") {
-      window.localStorage.setItem(dismissedAtKey, String(Date.now()));
-    }
     previousFocusRef.current?.focus();
     wasOpenedRef.current = false;
   }, [enabled, isOpen]);
@@ -181,14 +135,14 @@ export function NewsletterExitIntentPopup({ cooldownDays = 7, enabled = true }: 
           </button>
         </div>
         <ul className="newsletter-popup-benefits" aria-label="Beneficios de suscripción">
-          <li>Un email semanal en español.</li>
-          <li>Marcos accionables para decisiones de producto.</li>
-          <li>Sin spam, baja en un clic.</li>
+          <li>Solo 1 email a la semana en español, directo y accionable.</li>
+          <li>Ideas de AI Product Management que puedes aplicar en menos de 10 minutos.</li>
+          <li>Sin ruido: cero spam y baja en un clic.</li>
         </ul>
         <NewsletterSignup
           source="popup-exit-intent"
-          title="Antes de irte: únete al Product Knowledge Center"
-          description="Recibe una selección breve con lo más útil para PMs de producto y AI."
+          title="Llévate cada semana lo más útil para construir mejor producto"
+          description="Únete a Product Digest y recibe frameworks, casos y recursos curados para PMs y líderes de producto."
           onSuccess={() => {
             window.sessionStorage.setItem(subscribedSessionKey, "1");
             closeReasonRef.current = "success";
