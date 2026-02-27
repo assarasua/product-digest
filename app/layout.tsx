@@ -3,7 +3,9 @@ import type { ReactNode } from "react";
 
 import { CookieBanner } from "@/components/CookieBanner";
 import { NavigationTracker } from "@/components/NavigationTracker";
+import { NewsletterExitIntentPopup } from "@/components/NewsletterExitIntentPopup";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { PageTransition } from "@/components/PageTransition";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ogImageUrl } from "@/lib/seo";
 import { Providers } from "./providers";
@@ -101,11 +103,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <SiteHeader />
             </header>
             <main id="main-content" tabIndex={-1}>
-              {children}
+              <PageTransition>{children}</PageTransition>
             </main>
             <div className="page-wrap">
               <NewsletterSignup source="global" />
             </div>
+            <NewsletterExitIntentPopup cooldownDays={7} />
             <CookieBanner />
           </div>
         </Providers>

@@ -1,8 +1,10 @@
-export type NewsletterSource = "global" | "home-hero" | "article-inline";
+export type NewsletterSource = "global" | "home-hero" | "article-inline" | "popup-exit-intent";
 
 export type AnalyticsEvent =
   | { type: "nav_menu_open" }
   | { type: "nav_group_expand"; groupId: "contenido" | "recursos" }
+  | { type: "newsletter_popup_shown"; trigger: "exit-intent-desktop" | "back-intent-mobile" }
+  | { type: "newsletter_popup_dismissed"; reason: "close-button" | "overlay" | "escape" | "success" }
   | { type: "newsletter_submit_start"; source: NewsletterSource }
   | {
       type: "newsletter_submit_success";

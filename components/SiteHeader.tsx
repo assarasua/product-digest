@@ -155,7 +155,7 @@ export function SiteHeader() {
           })}
         </div>
         <div className="nav-level-2" aria-label={`Secciones de ${activeGroup.label}`}>
-          <div className="nav-subnav">
+          <div key={activeGroupId} className="nav-subnav nav-subnav-enter">
             {activeGroup.items.map((item) => {
               const active = isLinkActive(pathname, item);
               return (
@@ -191,7 +191,7 @@ export function SiteHeader() {
             <div
               id={`nav-group-panel-${group.id}`}
               className={`nav-group-panel${expandedGroupId === group.id ? " is-open" : ""}`}
-              hidden={expandedGroupId !== group.id}
+              aria-hidden={expandedGroupId !== group.id}
             >
               <div className="nav-links">
                 {group.items.map((item) => {

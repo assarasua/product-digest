@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { HomeFeedPagination } from "@/components/HomeFeedPagination";
-import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { PostCard } from "@/components/PostCard";
 import { getAllPostsFromApi } from "@/lib/posts-api";
 import { ogImageUrl } from "@/lib/seo";
@@ -42,11 +41,6 @@ export default async function HomePage() {
           Esta sección reúne análisis, marcos y guías creadas con IA para equipos de producto en etapa de crecimiento.
         </p>
       </section>
-      <NewsletterSignup
-        source="home-hero"
-        title="Recibe una idea accionable cada semana"
-        description="Suscríbete y recibe aprendizajes prácticos de producto en español, sin ruido."
-      />
 
       <Suspense
         fallback={
