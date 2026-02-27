@@ -167,15 +167,6 @@ a {
   align-items: center;
 }
 
-.nav-context {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.76rem;
-  line-height: 1.2;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
 .nav-menu-toggle {
   display: none;
   min-height: 44px;
@@ -1201,10 +1192,6 @@ h3 {
 
   .site-nav-top {
     width: 100%;
-  }
-
-  .nav-context {
-    display: none;
   }
 
   .nav-menu-toggle {

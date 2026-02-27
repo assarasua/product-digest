@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
@@ -13,9 +13,8 @@ type NavItem = {
 };
 
 type NavGroup = {
-  id: "contenido" | "recursos" | "comunidad";
+  id: "contenido" | "recursos";
   label: string;
-  contextMatchers: string[];
   items: NavItem[];
 };
 
@@ -23,30 +22,20 @@ const navGroups: NavGroup[] = [
   {
     id: "contenido",
     label: "Contenido",
-    contextMatchers: ["/", "/product-builders", "/archive", "/tags", "/tag", "/post"],
     items: [
       { href: "/", label: "Hub IA" },
       { href: "/product-builders", label: "Human Insights" },
-      { href: "/archive", label: "Artículos", matchPrefixes: ["/post"] },
-      { href: "/tags", label: "Temas", matchPrefixes: ["/tag"] }
+      { href: "/archive", label: "Recursos", matchPrefixes: ["/post"] }
     ]
   },
   {
     id: "recursos",
     label: "Recursos",
-    contextMatchers: ["/product-leaders-wiki", "/libros"],
-    items: [
-      { href: "/product-leaders-wiki", label: "Product Leaders" },
-      { href: "/libros", label: "Libros" }
-    ]
-  },
-  {
-    id: "comunidad",
-    label: "Comunidad",
-    contextMatchers: ["/eventos", "/about", "/cookies"],
     items: [
       { href: "/eventos", label: "Eventos" },
-      { href: "/about", label: "Acerca de" }
+      { href: "/about", label: "Acerca de" },
+      { href: "/product-leaders-wiki", label: "Product Leaders" },
+      { href: "/libros", label: "Libros" }
     ]
   }
 ];
@@ -88,18 +77,6 @@ export function SiteHeader() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
-  const activeGroupLabel = useMemo(() => {
-    const byActiveItem = navGroups.find((group) => group.items.some((item) => isLinkActive(pathname, item)));
-    if (byActiveItem) {
-      return byActiveItem.label;
-    }
-
-    const byContext = navGroups.find((group) =>
-      group.contextMatchers.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
-    );
-    return byContext?.label;
-  }, [pathname]);
-
   const handleToggleMenu = () => {
     setMenuOpen((previous) => {
       const next = !previous;
@@ -117,7 +94,6 @@ export function SiteHeader() {
           <Link href="/" className="brand-link">
             Product Digest
           </Link>
-          {activeGroupLabel ? <p className="nav-context">Sección: {activeGroupLabel}</p> : null}
         </div>
         <button
           type="button"
