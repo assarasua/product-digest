@@ -15,6 +15,7 @@ type NavItem = {
 type NavGroup = {
   id: "contenido" | "recursos";
   label: string;
+  href: string;
   routePrefixes: string[];
   items: NavItem[];
 };
@@ -23,16 +24,18 @@ const navGroups: NavGroup[] = [
   {
     id: "contenido",
     label: "Contenido",
+    href: "/",
     routePrefixes: ["/", "/product-builders", "/archive", "/post", "/tags", "/tag"],
     items: [
       { href: "/", label: "Hub IA" },
       { href: "/product-builders", label: "Human Insights" },
-      { href: "/archive", label: "Recursos", matchPrefixes: ["/post"] }
+      { href: "/archive", label: "Buscador", matchPrefixes: ["/post"] }
     ]
   },
   {
     id: "recursos",
-    label: "Recursos",
+    label: "Product Knowledge Center",
+    href: "/product-leaders-wiki",
     routePrefixes: ["/eventos", "/about", "/product-leaders-wiki", "/libros", "/cookies"],
     items: [
       { href: "/eventos", label: "Eventos" },
@@ -144,13 +147,15 @@ export function SiteHeader() {
           {navGroups.map((group) => {
             const active = group.id === activeGroupId;
             return (
-              <span
+              <Link
                 key={group.id}
+                href={group.href}
                 className={`nav-category${active ? " is-active" : ""}`}
                 data-active={active ? "true" : "false"}
+                aria-current={active ? "true" : undefined}
               >
                 {group.label}
-              </span>
+              </Link>
             );
           })}
         </div>
