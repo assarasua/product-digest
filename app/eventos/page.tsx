@@ -37,15 +37,32 @@ export default async function EventsPage() {
 
   const withTimestamp = events.map((event) => {
     const normalizedTime = event.time?.length === 5 ? `${event.time}:00` : event.time;
-    const primaryTimestamp = event.dateConfirmed
-      ? Date.parse(`${event.date}T${normalizedTime || "23:59:59"}`)
-      : Number.POSITIVE_INFINITY;
-    const fallbackTimestamp = event.dateConfirmed ? Date.parse(`${event.date}T23:59:59`) : Number.POSITIVE_INFINITY;
-    const timestamp = Number.isNaN(primaryTimestamp) ? fallbackTimestamp : primaryTimestamp;
+    let timestamp = Number.POSITIVE_INFINITY;
+
+    if (event.dateConfirmed) {
+      const dateHasTime = event.date.includes("T");
+      const primaryInput = dateHasTime ? event.date : `${event.date}T${normalizedTime || "23:59:59"}`;
+      const primaryTimestamp = Date.parse(primaryInput);
+
+      if (!Number.isNaN(primaryTimestamp)) {
+        timestamp = primaryTimestamp;
+      } else {
+        const fallbackFromRawDate = Date.parse(event.date);
+        if (!Number.isNaN(fallbackFromRawDate)) {
+          timestamp = fallbackFromRawDate;
+        } else {
+          const dateOnly = event.date.slice(0, 10);
+          const fallbackEndOfDay = Date.parse(`${dateOnly}T23:59:59`);
+          if (!Number.isNaN(fallbackEndOfDay)) {
+            timestamp = fallbackEndOfDay;
+          }
+        }
+      }
+    }
 
     return {
       event,
-      timestamp: Number.isNaN(timestamp) ? Number.POSITIVE_INFINITY : timestamp
+      timestamp
     };
   });
 
