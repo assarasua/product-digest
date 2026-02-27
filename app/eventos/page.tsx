@@ -33,10 +33,16 @@ export const metadata: Metadata = {
 export default async function EventsPage() {
   const events = await getPublicEventsFromApi();
   const now = Date.now();
+  const pastThresholdMs = 2 * 24 * 60 * 60 * 1000;
 
   const withTimestamp = events.map((event) => {
-    const baseTime = event.time?.length === 5 ? `${event.time}:00` : event.time;
-    const timestamp = event.dateConfirmed ? Date.parse(`${event.date}T${baseTime || "00:00:00"}`) : Number.POSITIVE_INFINITY;
+    const normalizedTime = event.time?.length === 5 ? `${event.time}:00` : event.time;
+    const primaryTimestamp = event.dateConfirmed
+      ? Date.parse(`${event.date}T${normalizedTime || "23:59:59"}`)
+      : Number.POSITIVE_INFINITY;
+    const fallbackTimestamp = event.dateConfirmed ? Date.parse(`${event.date}T23:59:59`) : Number.POSITIVE_INFINITY;
+    const timestamp = Number.isNaN(primaryTimestamp) ? fallbackTimestamp : primaryTimestamp;
+
     return {
       event,
       timestamp: Number.isNaN(timestamp) ? Number.POSITIVE_INFINITY : timestamp
@@ -44,12 +50,12 @@ export default async function EventsPage() {
   });
 
   const upcomingEvents = withTimestamp
-    .filter((item) => item.timestamp >= now)
+    .filter((item) => item.timestamp + pastThresholdMs >= now)
     .sort((a, b) => a.timestamp - b.timestamp)
     .map((item) => item.event);
 
   const pastEvents = withTimestamp
-    .filter((item) => item.timestamp < now)
+    .filter((item) => item.timestamp + pastThresholdMs < now)
     .sort((a, b) => b.timestamp - a.timestamp)
     .map((item) => item.event);
 
