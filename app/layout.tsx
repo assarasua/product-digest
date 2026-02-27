@@ -106,7 +106,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <Link href="/eventos">Eventos</Link>
                   <Link href="/libros">Libros</Link>
                   <Link href="/archive">Artículos</Link>
-                  <Link href="/search">Buscar</Link>
                   <Link href="/about">Acerca de</Link>
                 </div>
               </nav>
