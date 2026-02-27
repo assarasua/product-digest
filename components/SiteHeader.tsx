@@ -15,6 +15,7 @@ type NavItem = {
 type NavGroup = {
   id: "contenido" | "recursos";
   label: string;
+  routePrefixes: string[];
   items: NavItem[];
 };
 
@@ -22,6 +23,7 @@ const navGroups: NavGroup[] = [
   {
     id: "contenido",
     label: "Contenido",
+    routePrefixes: ["/", "/product-builders", "/archive", "/post", "/tags", "/tag"],
     items: [
       { href: "/", label: "Hub IA" },
       { href: "/product-builders", label: "Human Insights" },
@@ -31,6 +33,7 @@ const navGroups: NavGroup[] = [
   {
     id: "recursos",
     label: "Recursos",
+    routePrefixes: ["/eventos", "/about", "/product-leaders-wiki", "/libros", "/cookies"],
     items: [
       { href: "/eventos", label: "Eventos" },
       { href: "/about", label: "Acerca de" },
@@ -54,13 +57,32 @@ function isLinkActive(pathname: string, item: NavItem): boolean {
   );
 }
 
+function getActiveGroupId(pathname: string): NavGroup["id"] {
+  for (const group of navGroups) {
+    if (group.routePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+      return group.id;
+    }
+  }
+
+  return "contenido";
+}
+
+function getActiveGroup(pathname: string): NavGroup {
+  const activeId = getActiveGroupId(pathname);
+  return navGroups.find((group) => group.id === activeId) ?? navGroups[0];
+}
+
 export function SiteHeader() {
   const pathname = usePathname() || "/";
+  const activeGroup = getActiveGroup(pathname);
+  const activeGroupId = activeGroup.id;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [expandedGroupId, setExpandedGroupId] = useState<NavGroup["id"]>(activeGroupId);
 
   useEffect(() => {
     setMenuOpen(false);
-  }, [pathname]);
+    setExpandedGroupId(activeGroupId);
+  }, [activeGroupId, pathname]);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -82,6 +104,17 @@ export function SiteHeader() {
       const next = !previous;
       if (next) {
         trackAnalyticsEvent({ type: "nav_menu_open" });
+        setExpandedGroupId(activeGroupId);
+      }
+      return next;
+    });
+  };
+
+  const toggleGroup = (groupId: NavGroup["id"]) => {
+    setExpandedGroupId((previous) => {
+      const next = previous === groupId ? previous : groupId;
+      if (next !== previous) {
+        trackAnalyticsEvent({ type: "nav_group_expand", groupId: next });
       }
       return next;
     });
@@ -106,25 +139,76 @@ export function SiteHeader() {
         </button>
       </div>
 
+      <div className="site-nav-desktop" aria-label="Navegación de escritorio">
+        <div className="nav-level-1" aria-label="Categorías principales">
+          {navGroups.map((group) => {
+            const active = group.id === activeGroupId;
+            return (
+              <span
+                key={group.id}
+                className={`nav-category${active ? " is-active" : ""}`}
+                data-active={active ? "true" : "false"}
+              >
+                {group.label}
+              </span>
+            );
+          })}
+        </div>
+        <div className="nav-level-2" aria-label={`Secciones de ${activeGroup.label}`}>
+          <div className="nav-subnav">
+            {activeGroup.items.map((item) => {
+              const active = isLinkActive(pathname, item);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`nav-subnav-link${active ? " is-active" : ""}`}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       <div id="site-nav-groups" className={`nav-groups${menuOpen ? " is-open" : ""}`}>
         {navGroups.map((group) => (
           <div key={group.id} className="nav-group">
-            <p className="nav-group-title">{group.label}</p>
-            <div className="nav-links">
-              {group.items.map((item) => {
-                const active = isLinkActive(pathname, item);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`nav-link${active ? " is-active" : ""}`}
-                    aria-current={active ? "page" : undefined}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
+            <button
+              type="button"
+              className="nav-group-toggle"
+              aria-expanded={expandedGroupId === group.id}
+              aria-controls={`nav-group-panel-${group.id}`}
+              onClick={() => toggleGroup(group.id)}
+            >
+              <span className="nav-group-title">{group.label}</span>
+              <span className={`nav-group-chevron${expandedGroupId === group.id ? " is-open" : ""}`} aria-hidden="true">
+                ▾
+              </span>
+            </button>
+            <div
+              id={`nav-group-panel-${group.id}`}
+              className={`nav-group-panel${expandedGroupId === group.id ? " is-open" : ""}`}
+              hidden={expandedGroupId !== group.id}
+            >
+              <div className="nav-links">
+                {group.items.map((item) => {
+                  const active = isLinkActive(pathname, item);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`nav-link${active ? " is-active" : ""}`}
+                      aria-current={active ? "page" : undefined}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           </div>
         ))}

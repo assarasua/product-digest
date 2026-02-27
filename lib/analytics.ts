@@ -2,6 +2,7 @@ export type NewsletterSource = "global" | "home-hero" | "article-inline";
 
 export type AnalyticsEvent =
   | { type: "nav_menu_open" }
+  | { type: "nav_group_expand"; groupId: "contenido" | "recursos" }
   | { type: "newsletter_submit_start"; source: NewsletterSource }
   | {
       type: "newsletter_submit_success";
