@@ -13,7 +13,7 @@ type NavItem = {
 };
 
 type NavGroup = {
-  id: "contenido" | "recursos";
+  id: "contenido" | "recursos" | "acerca";
   label: string;
   href: string;
   routePrefixes: string[];
@@ -36,12 +36,21 @@ const navGroups: NavGroup[] = [
     id: "recursos",
     label: "Product Knowledge Center",
     href: "/product-leaders-wiki",
-    routePrefixes: ["/eventos", "/about", "/product-leaders-wiki", "/libros", "/cookies"],
+    routePrefixes: ["/eventos", "/product-leaders-wiki", "/libros"],
     items: [
       { href: "/eventos", label: "Eventos" },
-      { href: "/about", label: "Acerca de" },
       { href: "/product-leaders-wiki", label: "Product Leaders" },
       { href: "/libros", label: "Libros" }
+    ]
+  },
+  {
+    id: "acerca",
+    label: "Acerca de",
+    href: "/about",
+    routePrefixes: ["/about", "/cookies"],
+    items: [
+      { href: "/about", label: "Acerca de" },
+      { href: "/cookies", label: "Cookies" }
     ]
   }
 ];
