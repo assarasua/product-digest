@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI/UX Solution Design Reviewer"
+  short_description: "Critique and refine UI/UX solution designs"
+  default_prompt: "Use $ui-ux-solution-design-review to evaluate this solution design and propose prioritized UX/UI refinements with rationale and acceptance criteria."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Principal PM Solution Definer"
+  short_description: "Define product solutions with PM rigor"
+  default_prompt: "Use $principal-pm-solution-definition to define a principal-PM grade solution for this product problem with options, tradeoffs, and an execution plan."
