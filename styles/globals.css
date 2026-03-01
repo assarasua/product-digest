@@ -1347,6 +1347,14 @@ h3 {
   color: var(--ink-soft);
 }
 
+.prose-content .inline-markdown-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  vertical-align: middle;
+}
+
 .article-next-action {
   margin-top: 1.8rem;
   border: 1px solid var(--line);

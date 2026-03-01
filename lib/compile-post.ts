@@ -32,7 +32,7 @@ function extractYouTubeVideoId(value: string): string | null {
 
 function renderInline(text: string): ReactNode[] {
   const parts: ReactNode[] = [];
-  const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  const tokenRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)(?:\s+"[^"]*")?\)|\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let key = 0;
@@ -58,17 +58,36 @@ function renderInline(text: string): ReactNode[] {
     return nodes;
   }
 
-  while ((match = linkRegex.exec(text)) !== null) {
+  while ((match = tokenRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
       parts.push(...renderBoldSegments(text.slice(lastIndex, match.index)));
     }
-    parts.push(
-      createElement(
-        "a",
-        { key: `link-${key++}`, href: match[2], target: "_blank", rel: "noreferrer" },
-        renderBoldSegments(match[1])
-      )
-    );
+
+    const imageAlt = match[1];
+    const imageSrc = match[2];
+    const linkLabel = match[3];
+    const linkHref = match[4];
+
+    if (imageSrc) {
+      parts.push(
+        createElement("img", {
+          key: `inline-img-${key++}`,
+          src: imageSrc,
+          alt: imageAlt || "Imagen",
+          loading: "lazy",
+          className: "inline-markdown-image"
+        })
+      );
+    } else if (linkHref) {
+      parts.push(
+        createElement(
+          "a",
+          { key: `link-${key++}`, href: linkHref, target: "_blank", rel: "noreferrer" },
+          renderBoldSegments(linkLabel)
+        )
+      );
+    }
+
     lastIndex = match.index + match[0].length;
   }
 
@@ -121,7 +140,7 @@ export async function compilePost(post: Post): Promise<ReactNode> {
       continue;
     }
 
-    const markdownImage = line.match(/^!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)$/i);
+    const markdownImage = line.match(/^!\[([^\]]*)\]\((https?:\/\/[^\s)]+)(?:\s+"[^"]*")?\)$/i);
     if (markdownImage) {
       flushList();
       const alt = markdownImage[1].trim() || "Imagen del artículo";
