@@ -1330,6 +1330,23 @@ h3 {
   color: color-mix(in srgb, var(--ink-soft), black 15%);
 }
 
+.prose-content .prose-image {
+  margin: 1.1rem 0;
+}
+
+.prose-content .prose-image img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.prose-content .prose-image figcaption {
+  margin-top: 0.45rem;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
 .article-next-action {
   margin-top: 1.8rem;
   border: 1px solid var(--line);

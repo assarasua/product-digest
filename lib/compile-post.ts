@@ -121,6 +121,23 @@ export async function compilePost(post: Post): Promise<ReactNode> {
       continue;
     }
 
+    const markdownImage = line.match(/^!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)$/i);
+    if (markdownImage) {
+      flushList();
+      const alt = markdownImage[1].trim() || "Imagen del artículo";
+      const src = markdownImage[2];
+      blocks.push(
+        createElement(
+          "figure",
+          { key: `img-${key}`, className: "prose-image" },
+          createElement("img", { src, alt, loading: "lazy" }),
+          createElement("figcaption", null, alt)
+        )
+      );
+      key += 1;
+      continue;
+    }
+
     const youtube = line.match(/^\[youtube\]\((https?:\/\/[^\s)]+)\)$/i);
     if (youtube) {
       flushList();
