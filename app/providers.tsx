@@ -9,10 +9,7 @@ const orgId = process.env.NEXT_PUBLIC_INFINITEWATCH_ORG_ID || "698ee4257fd92064f
 const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY || "c96abb5d544df4471ce868ea3849d764";
 const amplitudeScriptSrc =
   process.env.NEXT_PUBLIC_AMPLITUDE_SCRIPT_SRC || `https://cdn.amplitude.com/script/${amplitudeApiKey}.js`;
-const amplitudeReplaySamplePercent = Math.max(
-  0,
-  Math.min(100, Number(process.env.NEXT_PUBLIC_AMPLITUDE_REPLAY_SAMPLE_PERCENT || 100))
-);
+const amplitudeReplaySamplePercent = 100;
 
 declare global {
   interface Window {
