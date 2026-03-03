@@ -33,11 +33,12 @@ export function Providers({ children }: { children: ReactNode }) {
   const [windowLoaded, setWindowLoaded] = useState(false);
   const [consentResolved, setConsentResolved] = useState(false);
   const [analyticsAllowed, setAnalyticsAllowed] = useState(false);
+  const [providerMountKey, setProviderMountKey] = useState(0);
 
   useEffect(() => {
     const onLoad = () => setWindowLoaded(true);
 
-    if (document.readyState === "complete") {
+    if (document.readyState !== "loading") {
       onLoad();
       return;
     }
@@ -67,6 +68,12 @@ export function Providers({ children }: { children: ReactNode }) {
     window.addEventListener(consentUpdatedEvent, onConsentUpdated as EventListener);
     return () => window.removeEventListener(consentUpdatedEvent, onConsentUpdated as EventListener);
   }, []);
+
+  useEffect(() => {
+    if (windowLoaded && consentResolved && analyticsAllowed) {
+      setProviderMountKey((prev) => prev + 1);
+    }
+  }, [analyticsAllowed, consentResolved, windowLoaded]);
 
   useEffect(() => {
     if (!windowLoaded || !consentResolved) {
@@ -153,7 +160,12 @@ export function Providers({ children }: { children: ReactNode }) {
   }
 
   return (
-    <InfiniteWatchProvider organizationId={orgId} defaultSamplingPercent={100} debug={false}>
+    <InfiniteWatchProvider
+      key={providerMountKey}
+      organizationId={orgId}
+      defaultSamplingPercent={100}
+      debug={false}
+    >
       {children}
     </InfiniteWatchProvider>
   );
